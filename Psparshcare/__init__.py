@@ -96,10 +96,10 @@ def ensure_user_login_columns(app: Flask):
                 WHERE LOWER(TRIM(COALESCE(type_of_user, ''))) = 'admin';
             """))
             conn.execute(text("""
-                UPDATE user_login
-                SET role = 'user'
-                WHERE LOWER(TRIM(COALESCE(type_of_user, 'member'))) <> 'admin';
-            """))
+                 UPDATE user_login
+                 SET role = 'user'
+                 WHERE LOWER(TRIM(COALESCE(type_of_user, 'member'))) <> 'admin';
+             """))
             conn.execute(text("""
                 UPDATE user_login
                 SET type_of_user = 'Member'
@@ -108,6 +108,21 @@ def ensure_user_login_columns(app: Flask):
 
             if updates:
                 app.logger.info("Added hierarchy columns to user_login.")
+
+def ensure_base_schema(app: Flask):
+    """
+    Ensure the core schema exists on a fresh database.
+
+    Many of our lightweight "ensure_*" auto-migrations assume base tables like
+    user_login already exist (because they were created historically).
+    On a brand-new cloud DB, those tables do not exist yet, so we must create
+    all model tables first (checkfirst=True) and then apply additive migrations.
+    """
+    with app.app_context():
+        # Ensure model metadata is registered before create_all().
+        from . import models  # noqa: F401
+
+        db.create_all()
 
 
 def ensure_user_creation_requests_table(app: Flask):
@@ -508,6 +523,9 @@ def create_app():
     # Trust proxy headers (Caddy/NGINX/DO Load Balancer) so external links + redirects use https correctly.
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     app.config.setdefault("PREFERRED_URL_SCHEME", "https")
+
+    # First-time cloud installs: create the core tables before running add-on migrations.
+    ensure_base_schema(app)
     ensure_user_login_level_column(app)
     ensure_user_login_columns(app)
     ensure_level_plans_table(app)
