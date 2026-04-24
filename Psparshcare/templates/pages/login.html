@@ -673,6 +673,10 @@
     object-fit: contain;
     margin: 0 auto 0.85rem;
     display: block;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(59, 130, 246, 0.18);
+    box-shadow: 0 10px 22px rgba(2, 6, 23, 0.10);
   }
 
   .auth-badge {
@@ -804,21 +808,32 @@
   }
 
   .active-users-chip {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
     align-items: center;
-    gap: 0.55rem;
-    padding: 0.5rem 0.8rem;
+    column-gap: 0.55rem;
+    row-gap: 0.15rem;
+    padding: 0.62rem 0.85rem;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.78);
     border: 1px solid rgba(59, 130, 246, 0.14);
     color: #334155;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 650;
   }
 
   .active-users-chip .count {
     color: #1d4ed8;
     font-weight: 700;
+  }
+
+  .active-users-meta {
+    grid-column: 1 / -1;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: rgba(51, 65, 85, 0.82);
+    line-height: 1.25;
   }
 
   .btn-whatsapp-soft {
@@ -1201,7 +1216,7 @@
             <div class="active-users-chip">
               <span>Active Users</span>
               <span class="count">{{ active_user_count|default(0) }}</span>
-              <span class="small text-muted d-block mt-1" style="font-size: 0.72rem;">
+              <span class="active-users-meta">
                 Highest: {{ max_visit_count|default(0) }}{% if max_visit_date %} on {{ max_visit_date.strftime('%d %b %Y') }}{% endif %}
               </span>
             </div>
