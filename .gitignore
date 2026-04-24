@@ -38,6 +38,12 @@ prize images/**
 Psparshcare/static/uploads/
 psc_coupens/psc_coupens_app/static/uploads/
 
+# External coupon system repo junk (keep only the app code in git)
+psc_coupens/Docs/
+psc_coupens/Freeze_psc_coupens/
+psc_coupens/schema/
+psc_coupens/scripts/
+
 # Large / local files
 *.xlsx
 *.docx
