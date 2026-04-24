@@ -121,8 +121,45 @@ def ensure_base_schema(app: Flask):
     with app.app_context():
         # Ensure model metadata is registered before create_all().
         from . import models  # noqa: F401
-
         db.create_all()
+
+
+def ensure_schema_bootstrap(app: Flask):
+    """
+    Run schema bootstrap + additive migrations exactly-once at a time.
+
+    Gunicorn runs multiple worker processes. On a fresh database, running schema
+    DDL concurrently can race (especially Postgres ENUM type creation).
+    We serialize all schema work using a Postgres advisory lock.
+    """
+    with app.app_context():
+        engine = db.get_engine()
+        lock_key = 2026042401  # any constant int; project-specific lock key
+        conn = engine.connect()
+        try:
+            conn.execute(text("SELECT pg_advisory_lock(:k)"), {"k": lock_key})
+
+            ensure_base_schema(app)
+            ensure_user_login_level_column(app)
+            ensure_user_login_columns(app)
+            ensure_level_plans_table(app)
+            ensure_user_creation_requests_table(app)
+            ensure_user_creation_request_columns(app)
+            ensure_reference_tables(app)
+            ensure_epin_columns(app)
+            ensure_epin_transfer_columns(app)
+            ensure_pin_usage_table(app)
+            ensure_legal_documents_table(app)
+            ensure_withdraw_requests_table(app)
+            ensure_login_page_visits_table(app)
+            ensure_referral_paid_column(app)
+            ensure_emp_id_sequence(app)
+        finally:
+            try:
+                conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": lock_key})
+            except Exception:
+                pass
+            conn.close()
 
 
 def ensure_user_creation_requests_table(app: Flask):
@@ -524,22 +561,7 @@ def create_app():
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     app.config.setdefault("PREFERRED_URL_SCHEME", "https")
 
-    # First-time cloud installs: create the core tables before running add-on migrations.
-    ensure_base_schema(app)
-    ensure_user_login_level_column(app)
-    ensure_user_login_columns(app)
-    ensure_level_plans_table(app)
-    ensure_user_creation_requests_table(app)
-    ensure_user_creation_request_columns(app)
-    ensure_reference_tables(app)
-    ensure_epin_columns(app)
-    ensure_epin_transfer_columns(app)
-    ensure_pin_usage_table(app)
-    ensure_legal_documents_table(app)
-    ensure_withdraw_requests_table(app)
-    ensure_login_page_visits_table(app)
-    ensure_referral_paid_column(app)
-    ensure_emp_id_sequence(app)
+    ensure_schema_bootstrap(app)
 
     # Register blueprints
     from .routes import main
