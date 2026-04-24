@@ -1,0 +1,83 @@
+/* Mobile-first overrides for the external coupon system.
+   Keep it simple: tap sizes, tables, and modal fit on phones. */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.required-asterisk {
+  color: #ef4444;
+  font-weight: 900;
+  margin-left: 0.2rem;
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --psc-tap: 44px;
+  }
+
+  .form-control,
+  .form-select,
+  .input-group-text,
+  textarea.form-control {
+    font-size: 16px;
+  }
+
+  .btn:not(.btn-sm):not(.btn-close) {
+    min-height: var(--psc-tap);
+  }
+
+  .btn-sm {
+    min-height: 36px;
+  }
+
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-responsive > .table,
+  .table-responsive > table {
+    min-width: 720px;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem auto;
+  }
+
+  .modal .modal-header {
+    position: relative;
+    justify-content: center;
+    text-align: center;
+    padding-right: 3.25rem;
+  }
+
+  .modal .modal-header .modal-title {
+    width: 100%;
+    text-align: center;
+  }
+
+  .modal .modal-header .btn-close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+  }
+
+  .modal .modal-content form .d-flex.justify-content-end {
+    justify-content: center !important;
+    flex-wrap: wrap;
+  }
+
+  .modal .modal-content form .d-flex.justify-content-end > .btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
+
+  .modal-content {
+    border-radius: 1.25rem;
+  }
+}

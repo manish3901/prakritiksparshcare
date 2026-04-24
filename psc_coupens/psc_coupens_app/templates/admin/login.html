@@ -1,0 +1,22 @@
+{% extends "layouts/admin_base.html" %}
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-7 col-lg-5 col-xl-4">
+    <div class="glass-card p-4">
+      <div class="text-center mb-3">
+        <img class="admin-brand-logo mb-3" src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo">
+        <h4 class="brand-font fw-bold mb-1">Admin Login</h4>
+        <div class="text-muted small">PSC Coupon System</div>
+      </div>
+      <form method="POST">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control rounded-pill" required>
+        <button class="btn btn-primary-gradient w-100 mt-3" type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

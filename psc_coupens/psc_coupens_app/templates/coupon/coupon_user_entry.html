@@ -1,0 +1,911 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Scan & Win | {{ company_name|default('Prakrutik SparshCare') }}{% endblock %}
+
+{% block head %}
+<style>
+  body {
+    background: radial-gradient(1200px 600px at 20% 0%, rgba(99, 102, 241, 0.22), transparent 60%),
+      radial-gradient(900px 500px at 80% 10%, rgba(244, 114, 182, 0.18), transparent 55%),
+      linear-gradient(135deg, #f8fafc 0%, #eef2ff 40%, #fdf2f8 100%);
+  }
+
+  .lottery-wrap {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding: 18px 10px;
+  }
+
+  .lottery-card {
+    border: 0;
+    border-radius: 26px;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(2, 6, 23, 0.12);
+  }
+
+  .lottery-hero {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(236, 72, 153, 0.10));
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  }
+
+  .brand-logo {
+    width: min(320px, 78vw);
+    height: 112px;
+    border-radius: 22px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 10px 12px;
+    box-shadow: 0 10px 25px rgba(2, 6, 23, 0.18);
+  }
+
+  .hero-title {
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    font-size: 1.9rem;
+    margin: 0;
+    color: #0f172a;
+  }
+
+  .hero-sub {
+    color: #475569;
+    margin: 2px 0 0 0;
+    font-size: 0.95rem;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: rgba(255, 255, 255, 0.7);
+    color: #0f172a;
+  }
+
+  .pill .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+  }
+
+  .form-label {
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 0.86rem;
+    margin-bottom: 8px;
+  }
+
+  .lottery-input,
+  .lottery-select {
+    border-radius: 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .lottery-input:focus,
+  .lottery-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.16);
+    border-color: rgba(79, 70, 229, 0.55);
+  }
+
+  .btn-lottery {
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 14px 35px rgba(79, 70, 229, 0.28);
+  }
+
+  .btn-lottery:hover {
+    filter: brightness(1.02);
+    color: #fff;
+  }
+
+  .btn-verify {
+    border-radius: 14px;
+    font-weight: 700;
+  }
+
+  .scan-box {
+    border-radius: 18px;
+    border: 1px dashed rgba(15, 23, 42, 0.20);
+    background: rgba(255, 255, 255, 0.65);
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    top: -10px;
+    background: linear-gradient(90deg, transparent, #22c55e, transparent);
+    filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.7));
+    animation: scanLine 1.8s infinite ease-in-out;
+  }
+
+  @keyframes scanLine {
+    0% { transform: translateY(0); opacity: 0.0; }
+    15% { opacity: 1; }
+    50% { transform: translateY(160px); opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translateY(0); opacity: 0.0; }
+  }
+
+  .fineprint {
+    color: #64748b;
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .scratch-shell {
+    border-radius: 22px;
+    background: radial-gradient(500px 280px at 20% 10%, rgba(79, 70, 229, 0.10), transparent 60%),
+      radial-gradient(500px 280px at 80% 10%, rgba(236, 72, 153, 0.08), transparent 60%),
+      rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 20px;
+  }
+
+  .scratch-container {
+    position: relative;
+    width: 360px;
+    max-width: 100%;
+    height: 180px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    box-shadow: 0 16px 40px rgba(2, 6, 23, 0.10);
+  }
+
+  #scratchCardSection.revealed .scratch-container {
+    height: 120px;
+  }
+
+  #scratchCardSection.revealed #scratchCanvas {
+    display: none;
+  }
+
+  #scratchCardSection.revealed #uniqueCodeDisplay {
+    display: none;
+  }
+
+  #scratchCardSection.revealed #refCopyWrap {
+    display: flex !important;
+  }
+
+  #scratchCardSection.revealing .scratch-container {
+    height: 120px;
+  }
+
+  #scratchCardSection.revealing #scratchCanvas {
+    display: none;
+  }
+
+  #scratchCardSection.revealing #uniqueCodeDisplay {
+    display: none;
+  }
+
+  #scratchCardSection.revealing #revealSpinner {
+    display: flex !important;
+  }
+
+  #scratchCanvas {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .code-reveal {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: 0.05em;
+    z-index: 1;
+  }
+
+  .code-reveal-wrap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .ref-copy {
+    width: 100%;
+    max-width: 420px;
+    display: none;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ref-copy input {
+    border-radius: 999px;
+    text-align: center;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+  }
+
+  .ref-copy .btn {
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .reveal-spinner {
+    width: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #334155;
+    font-weight: 700;
+  }
+
+  .congrats-live {
+    animation: congratsPulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes congratsPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  @media (max-width: 420px) {
+    .hero-title { font-size: 1.75rem; }
+    .brand-logo { height: 104px; }
+    .scratch-container { width: 320px; height: 168px; }
+    .code-reveal { font-size: 0.74rem; letter-spacing: 0.04em; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lottery-wrap">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-7">
+        <div class="card lottery-card">
+          <div class="lottery-hero p-4 p-md-5 text-center">
+            <img class="brand-logo mb-3" src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo">
+            <h1 class="hero-title">Scan & Win</h1>
+            <p class="hero-sub mb-0">{{ company_name|default('Prakrutik SparshCare') }} &bull; Scratch card lottery</p>
+
+            <div class="mt-3 d-flex flex-wrap gap-2 align-items-center justify-content-center text-center">
+              {% if selected_coupon_name %}
+              <span class="pill"><span class="dot"></span>Coupon: {{ selected_coupon_name.coupon_name }}</span>
+              {% else %}
+              <span class="pill"><span class="dot"></span>March Celebration Lucky Draw</span>
+              {% endif %}
+              {% if selected_coupon_name and selected_coupon_name.description %}
+              <span class="pill"><i class="bi bi-info-circle"></i>{{ selected_coupon_name.description }}</span>
+              {% endif %}
+            </div>
+
+            {% if company_profile and (company_profile.address or company_profile.phone or company_profile.email) %}
+            <div class="mt-3 fineprint">
+              {% if company_profile.address %}<div><i class="bi bi-geo-alt me-1"></i>{{ company_profile.address }}</div>{% endif %}
+              <div class="d-flex flex-wrap gap-3 mt-1">
+                {% if company_profile.phone %}<span><i class="bi bi-telephone me-1"></i>{{ company_profile.phone }}</span>{% endif %}
+                {% if company_profile.email %}<span><i class="bi bi-envelope me-1"></i>{{ company_profile.email }}</span>{% endif %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="card-body p-4 p-md-5">
+            {% if cn_code and not selected_coupon_name %}
+            <div class="alert alert-danger rounded-4 mb-4">
+              Invalid/disabled coupon QR. Please scan a valid coupon.
+            </div>
+            {% endif %}
+
+            <div id="barcodeSection" class="mb-4">
+              <div class="scan-box text-center">
+                <div class="scan-line"></div>
+                <div class="display-6 fw-bold text-dark">Ready to Play?</div>
+                <div class="text-muted mt-1">Scan the QR to unlock the scratch card.</div>
+                <div class="my-3">
+                  <i class="bi bi-qr-code-scan" style="font-size: 3.6rem; color: #111827;"></i>
+                </div>
+                <button id="simScanBtn" class="btn btn-outline-primary rounded-pill px-4" type="button">
+                  Simulate Scan
+                </button>
+                <div class="fineprint mt-3">
+                  Only registered mobile numbers can participate.
+                </div>
+              </div>
+            </div>
+
+            <form id="couponUserForm" class="d-none">
+              <input type="hidden" name="cn_code" value="{{ cn_code|default('') }}">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">First Name</label>
+                  <input type="text" name="first_name" class="form-control lottery-input" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Last Name</label>
+                  <input type="text" name="last_name" class="form-control lottery-input" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Mobile Number</label>
+                  <div class="input-group">
+                    <input type="text" id="mobileNo" name="mobile_no" class="form-control lottery-input"
+                      maxlength="10" pattern="[0-9]{10}" inputmode="numeric" required>
+                    <button class="btn btn-primary btn-verify px-4" type="button" id="verifyBtn">Verify</button>
+                  </div>
+                  <small id="mobileError" class="text-danger d-none">Please try again with a registered mobile number.</small>
+                  <small id="mobileOk" class="text-success d-none">Mobile verified. You can proceed.</small>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Coupon Code</label>
+                  <div class="input-group">
+                    <input type="text" id="couponCodeInp" name="coupon_code" class="form-control lottery-input"
+                      placeholder="Enter coupon code" required>
+                    <button class="btn btn-primary btn-verify px-4" type="button" id="verifyCodeBtn">Verify</button>
+                  </div>
+                  <small id="codeError" class="text-danger d-none">Coupon code not found.</small>
+                  <small id="codeOk" class="text-success d-none">Coupon code verified. You can proceed.</small>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Area / Zone</label>
+                  <input type="text" name="area_zone" class="form-control lottery-input" required>
+                </div>
+
+                <div class="col-12">
+                  <div class="alert alert-info rounded-4 mb-0">
+                    Coupon type will be allotted randomly after your mobile verification.
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-center mt-4">
+                <button id="submitBtn" class="btn btn-lottery px-5" disabled>Submit Details</button>
+                <div id="formMsg" class="small mt-3"></div>
+              </div>
+            </form>
+
+            <div id="scratchCardSection" class="d-none">
+              <div class="scratch-shell text-center">
+                <div id="revealHeader" class="d-none">
+                  <div class="h3 fw-bold mb-1 text-dark congrats-live">Congratulations!</div>
+                  <div id="winnerName" class="text-muted mb-3"></div>
+                </div>
+                <div id="prizeInfo" class="d-none mb-3">
+                  <div class="fw-bold text-dark" id="prizeTitle"></div>
+                  <img id="prizeImage" class="mt-2" alt="Prize"
+                    style="max-width: 460px; max-height: 380px; width: 100%; object-fit: contain; border-radius: 18px; border: 1px solid rgba(15, 23, 42, 0.10); background: #fff; padding: 8px;">
+                </div>
+                <div class="scratch-container">
+                  <canvas id="scratchCanvas" width="360" height="180"></canvas>
+                  <div class="code-reveal-wrap">
+                    <div class="text-muted small mb-1 d-none" id="refLabel">Reference Code</div>
+                    <div id="uniqueCodeDisplay" class="code-reveal">XXXXX</div>
+                    <div id="revealSpinner" class="reveal-spinner">
+                      <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                      <span>Revealing...</span>
+                    </div>
+                    <div id="refCopyWrap" class="ref-copy">
+                      <input id="refCodeInput" class="form-control form-control-sm" type="text" readonly value="">
+                      <button id="copyRefBtn" class="btn btn-sm btn-outline-primary" type="button">Copy</button>
+                    </div>
+                    <div id="refNote" class="text-muted small d-none">Note it for prize distribution.</div>
+                  </div>
+                </div>
+                <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
+                  <button id="reloadBtn" type="button" class="btn btn-outline-secondary rounded-pill px-4">Reset scratch</button>
+                  {% if cn_code %}
+                  <a id="goEntryBtn" class="btn btn-primary rounded-pill px-4" href="{{ url_for('main.coupon_entry', cn=cn_code) }}">Go to entry form</a>
+                  {% else %}
+                  <a id="goEntryBtn" class="btn btn-primary rounded-pill px-4" href="{{ url_for('main.coupon_entry') }}">Go to entry form</a>
+                  {% endif %}
+                </div>
+                <div id="scratchMsg" class="small mt-3 text-muted"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<div id="pageFlags" data-has-cn="{{ 1 if cn_code else 0 }}" class="d-none"></div>
+<script>
+  const simScanBtn = document.getElementById('simScanBtn');
+  const barcodeSection = document.getElementById('barcodeSection');
+  const couponUserForm = document.getElementById('couponUserForm');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const mobileNoInp = document.getElementById('mobileNo');
+  const mobileError = document.getElementById('mobileError');
+  const mobileOk = document.getElementById('mobileOk');
+  const couponCodeInp = document.getElementById('couponCodeInp');
+  const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+  const codeError = document.getElementById('codeError');
+  const codeOk = document.getElementById('codeOk');
+  const submitBtn = document.getElementById('submitBtn');
+  const formMsg = document.getElementById('formMsg');
+  const scratchCardSection = document.getElementById('scratchCardSection');
+  const scratchCanvas = document.getElementById('scratchCanvas');
+  const uniqueCodeDisplay = document.getElementById('uniqueCodeDisplay');
+  const reloadBtn = document.getElementById('reloadBtn');
+  const prizeInfo = document.getElementById('prizeInfo');
+  const prizeTitle = document.getElementById('prizeTitle');
+  const prizeImage = document.getElementById('prizeImage');
+  const revealHeader = document.getElementById('revealHeader');
+  const winnerName = document.getElementById('winnerName');
+  const refLabel = document.getElementById('refLabel');
+  const refNote = document.getElementById('refNote');
+  const scratchMsg = document.getElementById('scratchMsg');
+  const refCopyWrap = document.getElementById('refCopyWrap');
+  const refCodeInput = document.getElementById('refCodeInput');
+  const copyRefBtn = document.getElementById('copyRefBtn');
+
+  let isMobileVerified = false;
+  let isCodeVerified = false;
+  let couponUserId = null;
+  let participantName = '';
+  let participantMobile = '';
+
+  const showForm = () => {
+    if (barcodeSection) barcodeSection.classList.add('d-none');
+    if (couponUserForm) couponUserForm.classList.remove('d-none');
+  };
+
+  if (simScanBtn) {
+    simScanBtn.addEventListener('click', showForm);
+  }
+
+  // If opened via QR URL, skip simulation screen
+  const hasCnCode = (document.getElementById('pageFlags')?.dataset?.hasCn === '1');
+  if (hasCnCode) showForm();
+
+  const setVerifyState = (ok, msg) => {
+    isMobileVerified = !!ok;
+    if (mobileError) {
+      mobileError.classList.toggle('d-none', ok);
+      if (!ok && msg) mobileError.textContent = msg;
+    }
+    if (mobileOk) mobileOk.classList.toggle('d-none', !ok);
+    if (mobileNoInp) {
+      mobileNoInp.classList.toggle('border-danger', !ok);
+      mobileNoInp.classList.toggle('border-success', ok);
+    }
+    if (submitBtn) submitBtn.disabled = !(isMobileVerified && isCodeVerified);
+  };
+
+  const setCodeState = (ok, msg) => {
+    isCodeVerified = !!ok;
+    if (codeError) {
+      codeError.classList.toggle('d-none', ok);
+      if (!ok && msg) codeError.textContent = msg;
+    }
+    if (codeOk) codeOk.classList.toggle('d-none', !ok);
+    if (couponCodeInp) {
+      couponCodeInp.classList.toggle('border-danger', !ok);
+      couponCodeInp.classList.toggle('border-success', ok);
+    }
+    if (submitBtn) submitBtn.disabled = !(isMobileVerified && isCodeVerified);
+  };
+
+  if (verifyBtn) {
+    verifyBtn.addEventListener('click', async () => {
+      const mobile = (mobileNoInp?.value || '').replace(/\D/g, '');
+      if (mobile.length !== 10) {
+        setVerifyState(false, 'Please enter a 10-digit mobile number.');
+        return;
+      }
+      participantMobile = mobile;
+
+      verifyBtn.disabled = true;
+      verifyBtn.innerText = 'Checking...';
+
+      try {
+        const response = await fetch('/coupon/validate-mobile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile })
+        });
+        const data = await response.json();
+        if (data.found) {
+          setVerifyState(true);
+        } else {
+          setVerifyState(false, 'Please try again with a registered mobile number.');
+        }
+      } catch (err) {
+        setVerifyState(false, 'Unable to verify right now. Please try again.');
+      } finally {
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = 'Verify';
+      }
+    });
+  }
+
+  if (verifyCodeBtn) {
+    verifyCodeBtn.addEventListener('click', async () => {
+      const code = (couponCodeInp?.value || '').trim();
+      const cn = document.querySelector('input[name="cn_code"]')?.value || '';
+      if (!code) {
+        setCodeState(false, 'Please enter a coupon code.');
+        return;
+      }
+
+      verifyCodeBtn.disabled = true;
+      verifyCodeBtn.innerText = 'Checking...';
+
+      try {
+        const response = await fetch('/coupon/validate-coupon-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cn_code: cn, code })
+        });
+        const data = await response.json();
+        if (data.found) {
+          if (data.cn_code) {
+            const hidden = document.querySelector('input[name="cn_code"]');
+            if (hidden) hidden.value = data.cn_code;
+          }
+          setCodeState(true);
+          if (codeOk) {
+            const offer = data.coupon_name ? ` for "${data.coupon_name}"` : '';
+            codeOk.textContent = `Coupon code verified${offer}. You can proceed.`;
+          }
+        } else {
+          setCodeState(false, data.message || 'Coupon code not found.');
+        }
+      } catch (err) {
+        setCodeState(false, 'Unable to verify right now. Please try again.');
+      } finally {
+        verifyCodeBtn.disabled = false;
+        verifyCodeBtn.innerText = 'Verify';
+      }
+    });
+  }
+
+  const copyReferenceCode = async () => {
+    const text = (refCodeInput?.value || '').trim();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      if (scratchMsg) {
+        scratchMsg.className = 'small mt-3 text-success';
+        scratchMsg.textContent = 'Copied reference code.';
+      }
+    } catch (e) {
+      try {
+        refCodeInput.focus();
+        refCodeInput.select();
+        document.execCommand('copy');
+        if (scratchMsg) {
+          scratchMsg.className = 'small mt-3 text-success';
+          scratchMsg.textContent = 'Copied reference code.';
+        }
+      } catch (e2) {}
+    }
+  };
+
+  if (copyRefBtn) copyRefBtn.addEventListener('click', copyReferenceCode);
+  if (refCodeInput) {
+    refCodeInput.addEventListener('click', () => {
+      try { refCodeInput.select(); } catch (e) {}
+    });
+  }
+
+  if (couponUserForm) {
+    couponUserForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!isMobileVerified || !isCodeVerified) return;
+
+      const fn = (couponUserForm.querySelector('input[name="first_name"]')?.value || '').trim();
+      const ln = (couponUserForm.querySelector('input[name="last_name"]')?.value || '').trim();
+      participantName = (fn + ' ' + ln).trim();
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Submitting...';
+      }
+      if (formMsg) {
+        formMsg.className = 'small mt-3 text-muted';
+        formMsg.textContent = '';
+      }
+
+      const formData = new FormData(couponUserForm);
+      try {
+        const response = await fetch('/coupon/register', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.success) {
+          couponUserId = data.coupon_user_id;
+          if (uniqueCodeDisplay) uniqueCodeDisplay.textContent = 'XXXXX';
+          if (revealHeader) revealHeader.classList.add('d-none');
+          if (prizeInfo) prizeInfo.classList.add('d-none');
+          if (refLabel) refLabel.classList.add('d-none');
+          if (refNote) refNote.classList.add('d-none');
+           couponUserForm.classList.add('d-none');
+           scratchCardSection.classList.remove('d-none');
+           requestAnimationFrame(() => requestAnimationFrame(initScratchCard));
+         } else {
+          if (formMsg) {
+            formMsg.className = 'small mt-3 text-danger';
+            formMsg.textContent = data.message || 'Unable to submit. Please try again.';
+          }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Submit Details';
+          }
+        }
+      } catch (err) {
+        if (formMsg) {
+          formMsg.className = 'small mt-3 text-danger';
+          formMsg.textContent = 'Unable to submit. Please try again.';
+        }
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Submit Details';
+        }
+      }
+    });
+  }
+
+  // Reset only the scratch overlay (do not reload the whole page, which can bring the user back to the entry form).
+  if (reloadBtn) {
+    reloadBtn.addEventListener('click', () => {
+      if (revealHeader && !revealHeader.classList.contains('d-none')) {
+        // Already revealed -> send user to entry form (start over)
+        const go = document.getElementById('goEntryBtn');
+        if (go && go.href) window.location.href = go.href;
+        else window.location.reload();
+        return;
+      }
+      if (uniqueCodeDisplay) uniqueCodeDisplay.textContent = 'XXXXX';
+      if (scratchMsg) scratchMsg.textContent = '';
+      requestAnimationFrame(() => requestAnimationFrame(initScratchCard));
+    });
+  }
+
+  let scratchHandlers = null;
+
+  function teardownScratchCard() {
+    if (!scratchCanvas || !scratchHandlers) return;
+    const { onPointerDown, onPointerMove, onPointerUp } = scratchHandlers;
+    scratchCanvas.removeEventListener('pointerdown', onPointerDown);
+    scratchCanvas.removeEventListener('pointermove', onPointerMove);
+    scratchCanvas.removeEventListener('pointerup', onPointerUp);
+    scratchCanvas.removeEventListener('pointercancel', onPointerUp);
+    scratchHandlers = null;
+  }
+
+  function initScratchCard() {
+    if (!scratchCanvas) return;
+    const ctx = scratchCanvas.getContext('2d');
+    if (!ctx) return;
+
+    teardownScratchCard();
+    if (scratchCardSection) scratchCardSection.classList.remove('revealed');
+    if (scratchCardSection) scratchCardSection.classList.remove('revealing');
+
+    // Keep canvas crisp and in sync with CSS size.
+    const rect0 = scratchCanvas.getBoundingClientRect();
+    const dpr0 = window.devicePixelRatio || 1;
+    const w0 = Math.max(1, Math.round(rect0.width * dpr0));
+    const h0 = Math.max(1, Math.round(rect0.height * dpr0));
+    if (scratchCanvas.width !== w0 || scratchCanvas.height !== h0) {
+      scratchCanvas.width = w0;
+      scratchCanvas.height = h0;
+    }
+
+    // overlay (must reset composite mode first; otherwise a previous destination-out
+    // can make the whole layer transparent and reveal instantly on reset)
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+    ctx.font = `bold ${Math.round(18 * dpr0)}px Inter, system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('SCRATCH HERE', scratchCanvas.width / 2, scratchCanvas.height / 2);
+
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const brushRadius = 18 * dpr0;
+    ctx.lineWidth = brushRadius * 2;
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+
+    let isDown = false;
+    let scratched = 0;
+    let isRevealing = false;
+    let nextTryAt = 0;
+    let lastPoint = null;
+
+    const setScratchMsg = (kind, text) => {
+      if (!scratchMsg) return;
+      scratchMsg.className = 'small mt-3';
+      if (kind === 'danger') scratchMsg.classList.add('text-danger');
+      else if (kind === 'success') scratchMsg.classList.add('text-success');
+      else scratchMsg.classList.add('text-muted');
+      scratchMsg.textContent = text || '';
+    };
+
+    /** @param {any} ev */
+    const pos = (ev) => {
+      const rect = scratchCanvas.getBoundingClientRect();
+      const clientX = Number(ev?.clientX ?? 0);
+      const clientY = Number(ev?.clientY ?? 0);
+      return { x: (clientX - rect.left) * dpr0, y: (clientY - rect.top) * dpr0 };
+    };
+
+    const scratchAt = (x, y) => {
+      ctx.beginPath();
+      ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const scratchLine = (from, to) => {
+      if (!from) return scratchAt(to.x, to.y);
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    };
+
+    // Fast scratch percent: sample a small downscaled probe canvas.
+    const probe = document.createElement('canvas');
+    probe.width = 120;
+    probe.height = 60;
+    const pctx = probe.getContext('2d', { willReadFrequently: true });
+    if (pctx) pctx.imageSmoothingEnabled = false;
+
+    const calcScratchedPercent = () => {
+      if (!pctx) return 0;
+      pctx.clearRect(0, 0, probe.width, probe.height);
+      pctx.drawImage(scratchCanvas, 0, 0, probe.width, probe.height);
+      const img = pctx.getImageData(0, 0, probe.width, probe.height).data;
+      let clear = 0;
+      for (let i = 3; i < img.length; i += 4) {
+        // destination-out erasing leaves partially-transparent pixels due to anti-aliasing.
+        // Downscaling can blend; treat alpha < 200 as cleared.
+        if (img[i] < 200) clear++;
+      }
+      return Math.round((clear / (img.length / 4)) * 100);
+    };
+
+    const maybeReveal = async () => {
+      if (!couponUserId) return;
+      if (isRevealing) return;
+      if (Date.now() < nextTryAt) return;
+      const pct = calcScratchedPercent();
+      if (pct < 30) {
+        setScratchMsg('muted', `Scratch to reveal (${pct}%)`);
+        return;
+      }
+
+      isRevealing = true;
+      if (scratchCardSection) scratchCardSection.classList.add('revealing');
+      teardownScratchCard();
+      setScratchMsg('muted', 'Revealing your prize...');
+
+      try {
+        const res = await fetch('/coupon/reveal-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coupon_user_id: couponUserId })
+        });
+        let data = null;
+        try { data = await res.json(); } catch (e) { data = null; }
+        if (data && data.success) {
+          if (scratchCardSection) {
+            scratchCardSection.classList.remove('revealing');
+            scratchCardSection.classList.add('revealed');
+          }
+
+          if (uniqueCodeDisplay) uniqueCodeDisplay.textContent = data.unique_code || '';
+          if (refCodeInput) refCodeInput.value = data.unique_code || '';
+          if (refCopyWrap) refCopyWrap.style.display = 'flex';
+          if (refLabel) refLabel.classList.remove('d-none');
+          if (refNote) refNote.classList.remove('d-none');
+          if (revealHeader) revealHeader.classList.remove('d-none');
+          if (winnerName) {
+            const label = participantName || participantMobile || '';
+            winnerName.textContent = label ? `Winner: ${label}` : '';
+          }
+          if (prizeTitle) {
+            const lvl = (data.prize_level !== undefined && data.prize_level !== null) ? `Prize Level ${data.prize_level}` : 'Prize';
+            prizeTitle.textContent = `${data.coupon_type || 'Coupon'} • ${lvl}`;
+          }
+          if (prizeImage) {
+            if (data.prize_image_url) {
+              prizeImage.src = data.prize_image_url;
+              prizeImage.classList.remove('d-none');
+            } else {
+              prizeImage.removeAttribute('src');
+              prizeImage.classList.add('d-none');
+            }
+          }
+          if (prizeInfo) prizeInfo.classList.remove('d-none');
+          setScratchMsg('success', 'Prize revealed successfully.');
+        } else {
+          const msg = (data && data.message) ? data.message : (res.ok ? 'Unable to reveal code. Please try again.' : `Server error (${res.status}). Please try again.`);
+          setScratchMsg('danger', msg);
+          isRevealing = false;
+          nextTryAt = Date.now() + 1200;
+          if (scratchCardSection) scratchCardSection.classList.remove('revealing');
+          requestAnimationFrame(() => requestAnimationFrame(initScratchCard));
+        }
+      } catch (err) {
+        setScratchMsg('danger', 'Network error. Please try again.');
+        isRevealing = false;
+        nextTryAt = Date.now() + 1200;
+        if (scratchCardSection) scratchCardSection.classList.remove('revealing');
+        requestAnimationFrame(() => requestAnimationFrame(initScratchCard));
+      }
+    };
+
+    const onPointerDown = (ev) => {
+      isDown = true;
+      try { scratchCanvas.setPointerCapture(ev.pointerId); } catch (e) { }
+      const p = pos(ev);
+      lastPoint = p;
+      scratchAt(p.x, p.y);
+      scratched++;
+      if (scratched % 4 === 0) maybeReveal();
+      ev.preventDefault();
+    };
+
+    const onPointerUp = (ev) => {
+      isDown = false;
+      lastPoint = null;
+      maybeReveal();
+      ev.preventDefault();
+    };
+
+    const onPointerMove = (ev) => {
+      if (!isDown) return;
+      const p = pos(ev);
+      scratchLine(lastPoint, p);
+      lastPoint = p;
+      scratched++;
+      if (scratched % 4 === 0) maybeReveal();
+      ev.preventDefault();
+    };
+
+    scratchHandlers = { onPointerDown, onPointerMove, onPointerUp };
+    scratchCanvas.addEventListener('pointerdown', onPointerDown, { passive: false });
+    scratchCanvas.addEventListener('pointermove', onPointerMove, { passive: false });
+    scratchCanvas.addEventListener('pointerup', onPointerUp, { passive: false });
+    scratchCanvas.addEventListener('pointercancel', onPointerUp, { passive: false });
+
+    setScratchMsg('muted', 'Scratch to reveal (0%)');
+  }
+</script>
+{% endblock %}

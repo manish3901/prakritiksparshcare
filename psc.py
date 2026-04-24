@@ -20,14 +20,24 @@ else:  # pragma: no cover
 
     coupon_app = Flask("psc_coupon_unavailable")
 
-    @coupon_app.get("/")
-    def _coupon_unavailable():
+    def _unavailable_response():
         # Keep this plain-text so it is easy to see in production if misconfigured.
         return (
             "External coupon system is not available on this deployment. "
-            "Ask admin to install the coupon module or initialize git submodules.",
+            "Ask admin to install the coupon module (psc_coupens) and redeploy.",
             503,
         )
+
+    @coupon_app.get("/")
+    def _coupon_unavailable_root():
+        return _unavailable_response()
+
+    # Keep common entry points from returning 404 so the PSC buttons don't feel broken.
+    @coupon_app.get("/admin")
+    @coupon_app.get("/admin/login")
+    @coupon_app.get("/coupon/entry")
+    def _coupon_unavailable_common():
+        return _unavailable_response()
 
 # Expose the coupon engine as a dedicated sub-application inside PSC.
 app = DispatcherMiddleware(

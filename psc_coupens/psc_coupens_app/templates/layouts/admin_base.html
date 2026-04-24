@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSC Coupon Admin - {% block title %}{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-first.css') }}">
+
+  <style>
+    :root{
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --glass-bg: rgba(255,255,255,.80);
+      --glass-border: rgba(226,232,240,.70);
+      --sidebar-width: 270px;
+    }
+
+    body{
+      font-family: 'Inter', sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(99, 102, 241, 0.12), transparent 60%),
+        radial-gradient(900px 500px at 80% 10%, rgba(168, 85, 247, 0.10), transparent 55%),
+        #f8fafc;
+      color:#0f172a;
+      overflow-x:hidden;
+      min-height:100vh;
+    }
+
+    h1,h2,h3,h4,.brand-font{ font-family: 'Outfit', sans-serif; }
+
+    .glass-card{
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.25rem;
+      box-shadow: 0 12px 40px rgba(2,6,23,.08);
+    }
+
+    .btn-primary-gradient{
+      background: var(--primary-gradient);
+      border:none;
+      color:#fff;
+      font-weight:800;
+      padding:.6rem 1.15rem;
+      border-radius:999px;
+      box-shadow: 0 10px 25px rgba(99,102,241,.22);
+    }
+
+    .sidebar-overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background: rgba(2,6,23,.45);
+      z-index:999;
+      opacity:0;
+      transition: opacity .2s ease;
+    }
+    .sidebar-overlay.active{ display:block; opacity:1; }
+
+    .sidebar{
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      background: rgba(255,255,255,.86);
+      border-right: 1px solid rgba(226,232,240,.9);
+      z-index: 1000;
+      padding: 1.25rem .75rem;
+      transition: transform .25s ease;
+    }
+
+    .admin-brand-logo{
+      width: min(220px, 100%);
+      height: 96px;
+      object-fit: contain;
+      border-radius: 18px;
+      background: rgba(255,255,255,.9);
+      padding: 6px 10px;
+      box-shadow: 0 10px 25px rgba(2,6,23,.10);
+    }
+
+    .sidebar .nav-link{
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+      padding:.7rem .95rem;
+      margin:.25rem .5rem;
+      border-radius:.9rem;
+      color:#475569;
+      font-weight:700;
+      transition: all .15s ease;
+    }
+    .sidebar .nav-link:hover{ background: rgba(241,245,249,.9); color:#0f172a; }
+    .sidebar .nav-link.active{
+      background: var(--primary-gradient);
+      color:#fff;
+      box-shadow: 0 10px 25px rgba(99,102,241,.22);
+    }
+
+    .main-content{
+      margin-left: var(--sidebar-width);
+      padding: 1.75rem;
+      transition: margin-left .25s ease;
+    }
+
+    .top-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap:wrap;
+    }
+
+    .user-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:.65rem;
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(226,232,240,.9);
+      padding:.5rem .9rem;
+      border-radius:999px;
+    }
+    .avatar{
+      width:34px;height:34px;border-radius:50%;
+      background: var(--primary-gradient);
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:900;font-size:.85rem;
+    }
+
+    @media (max-width: 991.98px){
+      .sidebar{ transform: translateX(-102%); }
+      .sidebar.active{ transform: translateX(0); }
+      .main-content{ margin-left:0; padding: 1rem; }
+    }
+  </style>
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% if session.get('is_admin') %}
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="d-flex align-items-center justify-content-between px-2">
+        <div class="w-100 text-center">
+          <img class="admin-brand-logo mb-2" src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo">
+          <div class="brand-font fw-bold lh-sm">Coupon Admin</div>
+          <div class="text-muted small lh-sm">Control Center</div>
+        </div>
+        <button class="btn btn-link d-lg-none p-0 text-muted ms-2" id="closeSidebarBtn" aria-label="Close Menu">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <nav class="mt-2">
+        {% set current_section = request.args.get('section', 'dashboard') %}
+        <a class="nav-link {% if current_section == 'dashboard' %}active{% endif %}" href="{{ url_for('main.admin_dashboard') }}">
+          <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        </a>
+        <a class="nav-link {% if current_section == 'names' %}active{% endif %}" href="{{ url_for('main.admin_dashboard', section='names') }}">
+          <i class="bi bi-qr-code"></i><span>Coupon Names</span>
+        </a>
+        <a class="nav-link {% if current_section == 'masters' %}active{% endif %}" href="{{ url_for('main.admin_dashboard', section='masters') }}">
+          <i class="bi bi-ticket-perforated"></i><span>Coupon Masters</span>
+        </a>
+        <a class="nav-link {% if current_section == 'distribution' %}active{% endif %}" href="{{ url_for('main.admin_dashboard', section='distribution') }}">
+          <i class="bi bi-diagram-3"></i><span>Distribution</span>
+        </a>
+        <a class="nav-link {% if current_section == 'validators' %}active{% endif %}" href="{{ url_for('main.admin_dashboard', section='validators') }}">
+          <i class="bi bi-shield-check"></i><span>Validators</span>
+        </a>
+        <a class="nav-link {% if current_section == 'users' %}active{% endif %}" href="{{ url_for('main.admin_dashboard', section='users') }}">
+          <i class="bi bi-people"></i><span>Coupon Users</span>
+        </a>
+
+        <div class="mt-auto pt-4 px-2">
+          <a class="nav-link text-danger" href="{{ url_for('main.admin_logout') }}">
+            <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+  {% endif %}
+
+  <main class="{% if session.get('is_admin') %}main-content{% else %}container py-5{% endif %}">
+    {% if session.get('is_admin') %}
+      <header class="top-header">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-light border d-lg-none rounded-pill px-3" id="hamburgerBtn" aria-label="Open Menu">
+            <i class="bi bi-list"></i>
+          </button>
+          <div>
+            <h2 class="brand-font fw-bold mb-0">{% block page_title %}{% endblock %}</h2>
+            <div class="text-muted small">{% block page_subtitle %}{% endblock %}</div>
+          </div>
+        </div>
+        <div class="user-pill">
+          <div class="avatar">A</div>
+          <div class="d-none d-md-block">
+            <div class="fw-semibold small mb-0">Admin</div>
+            <div class="text-muted" style="font-size:.78rem;">PSC Coupon System</div>
+          </div>
+        </div>
+      </header>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show glass-card border-0 mb-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const hamburgerBtn = document.getElementById('hamburgerBtn');
+      const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.toggle('active');
+        if (overlay) overlay.classList.toggle('active');
+        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+      }
+
+      function closeSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleSidebar);
+      if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+      if (overlay) overlay.addEventListener('click', closeSidebar);
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

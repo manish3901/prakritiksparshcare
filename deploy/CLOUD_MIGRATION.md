@@ -124,6 +124,7 @@ Add:
 SECRET_KEY=<generate a long random string>
 PSC_DB_PASSWORD=<strong password>
 COUPON_DB_PASSWORD=<strong password>
+COUPON_ADMIN_PASSWORD=<strong password for /external-coupen-system/admin login>
 ```
 
 Tip: avoid using a single quote character `'` in the DB passwords to keep init scripts simple.

@@ -9,6 +9,8 @@ services:
       COUPON_DATABASE_URL: "${COUPON_DATABASE_URL:-postgresql+psycopg2://psc_coupon_user:${COUPON_DB_PASSWORD}@psc_db:5432/psc_coupon}"
       COUPON_ENGINE_ADMIN_URL: "${COUPON_ENGINE_ADMIN_URL:-/external-coupen-system/admin}"
       COUPON_ENGINE_PUBLIC_URL: "${COUPON_ENGINE_PUBLIC_URL:-/external-coupen-system/coupon/entry}"
+      # Coupon engine admin login password (used by external coupon system).
+      ADMIN_PASSWORD: "${COUPON_ADMIN_PASSWORD:-}"
       PORT: "8000"
     ports:
       - "8000:8000"

@@ -1,0 +1,1205 @@
+{% extends "layouts/admin_base.html" %}
+
+{% set active_section = request.args.get('section', 'dashboard') %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block page_title %}
+  {% if active_section == 'names' %}Coupon Names
+  {% elif active_section == 'masters' %}Coupon Masters
+  {% elif active_section == 'distribution' %}Prize Distribution
+  {% elif active_section == 'validators' %}Validators
+  {% elif active_section == 'users' %}Coupon Users
+  {% else %}Coupon Management{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+  {% if active_section == 'dashboard' %}Names, prizes, validators, and winners in one place
+  {% elif active_section == 'names' %}Create barcode coupons and share entry links
+  {% elif active_section == 'masters' %}Define prize types, quotas, and images
+  {% elif active_section == 'distribution' %}Tune unlock rules and probabilities
+  {% elif active_section == 'validators' %}Manage eligible mobile numbers (manual + Excel)
+  {% elif active_section == 'users' %}View latest coupon users and winners
+  {% else %}Manage coupons{% endif %}
+{% endblock %}
+
+{% block head %}
+<style>
+  .dist-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .28rem .65rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    font-size: .8rem;
+    font-weight: 700;
+  }
+
+  .dist-bar {
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(148, 163, 184, 0.22);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+  }
+
+  .dist-bar > span { display: inline-block; height: 100%; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  {% if active_section in ('dashboard', 'names') %}
+  <div class="col-12 {% if active_section == 'dashboard' %}col-xl-6{% endif %}" id="sectionNames">
+    <div class="glass-card p-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <h5 class="brand-font mb-0"><i class="bi bi-qr-code me-2 text-primary"></i>Coupon Names</h5>
+        <div class="d-flex align-items-center gap-2">
+          <div class="text-muted small d-none d-md-block">Create campaigns & entry links</div>
+          <button class="btn btn-sm btn-outline-primary rounded-pill"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#couponNameManageCollapse"
+                  aria-expanded="false"
+                  aria-controls="couponNameManageCollapse">
+            Manage
+          </button>
+        </div>
+      </div>
+
+      <div class="collapse" id="couponNameManageCollapse">
+        <div class="p-3 rounded-4 border bg-white" style="--bs-bg-opacity: .55;">
+          <form class="row g-2 align-items-end" action="{{ url_for('main.coupon_name_create') }}" method="POST">
+            <div class="col-12 col-md-5">
+              <label class="form-label">Name</label>
+              <input class="form-control rounded-pill" name="coupon_name" required>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">Status</label>
+              <select class="form-select rounded-pill" name="status">
+                <option>Active</option>
+                <option>Disabled</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-3">
+              <button class="btn btn-primary-gradient w-100" type="submit">Add</button>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <input class="form-control rounded-pill" name="description" placeholder="Optional">
+            </div>
+          </form>
+
+          <hr class="my-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <h6 class="brand-font mb-0"><i class="bi bi-key me-2 text-primary"></i>Coupon Codes</h6>
+            <div class="text-muted small">Generate multiple codes for the same coupon name</div>
+          </div>
+
+          <form class="row g-2 align-items-end" action="{{ url_for('main.coupon_code_generate') }}" method="POST">
+            <div class="col-12 col-md-8">
+              <label class="form-label">Coupon Name</label>
+              <select class="form-select rounded-pill" name="coupon_name_id" required>
+                {% for cn in coupon_names %}
+                <option value="{{ cn.coupon_name_id }}">{{ cn.coupon_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6 col-md-2">
+              <label class="form-label">Count</label>
+              <input class="form-control rounded-pill" name="count" value="10" inputmode="numeric">
+            </div>
+            <div class="col-6 col-md-2">
+              <button class="btn btn-primary-gradient w-100" type="submit">Generate</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="table-responsive mt-3">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:72px;">Sr No</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Barcode</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cn in coupon_names %}
+            <tr>
+              <td class="text-muted small">{{ loop.index }}</td>
+              <td class="fw-bold">{{ cn.coupon_name }}</td>
+              <td><span class="badge {% if cn.status == 'Active' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ cn.status }}</span></td>
+              <td class="small"><code>{{ cn.barcode_value }}</code></td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary rounded-pill"
+                   href="{{ url_for('main.coupon_entry', cn=cn.barcode_value) }}" target="_blank">Entry Link</a>
+                <a class="btn btn-sm btn-outline-dark rounded-pill"
+                   href="{{ url_for('main.coupon_name_qr', coupon_name_id=cn.coupon_name_id) }}" target="_blank"
+                   title="View QR code">
+                  <i class="bi bi-qr-code"></i> QR
+                </a>
+                <a class="btn btn-sm btn-outline-success rounded-pill"
+                   href="{{ url_for('main.coupon_name_qr', coupon_name_id=cn.coupon_name_id, download=1) }}"
+                   title="Download QR code">
+                  <i class="bi bi-download"></i>
+                </a>
+                <a class="btn btn-sm btn-outline-danger rounded-pill"
+                   href="{{ url_for('main.coupon_name_delete', id=cn.coupon_name_id) }}"
+                   onclick="return confirm('Delete this coupon name?')">Delete</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-muted small">No coupon names yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-responsive mt-3">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:72px;">Sr No</th>
+              <th>Coupon</th>
+              <th>Code</th>
+              <th>Status</th>
+              <th>Usage</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cc in coupon_codes %}
+            <tr>
+              <td class="text-muted small">{{ loop.index }}</td>
+              <td class="small">{{ cc.coupon_name.coupon_name if cc.coupon_name else '-' }}</td>
+              <td class="fw-bold"><code>{{ cc.code }}</code></td>
+              <td><span class="badge {% if cc.status == 'Active' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ cc.status }}</span></td>
+              {% set used_count = code_use_counts.get(cc.id, 0) %}
+              <td>
+                {% if used_count and used_count > 0 %}
+                  <span class="badge text-bg-primary">Used ({{ used_count }})</span>
+                {% else %}
+                  <span class="badge text-bg-light text-dark border">Not used</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <form class="d-inline-flex align-items-center gap-2" action="{{ url_for('main.coupon_code_update', id=cc.id) }}" method="POST">
+                  <select class="form-select form-select-sm rounded-pill" name="status" style="width: 130px;">
+                    <option value="Active" {% if cc.status == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Disabled" {% if cc.status == 'Disabled' %}selected{% endif %}>Disabled</option>
+                  </select>
+                  <button class="btn btn-sm btn-outline-primary rounded-pill" type="submit">Save</button>
+                </form>
+                {% if used_count and used_count > 0 %}
+                  <button class="btn btn-sm btn-outline-danger rounded-pill ms-1" type="button" disabled title="Used coupon codes cannot be deleted">Delete</button>
+                {% else %}
+                  <a class="btn btn-sm btn-outline-danger rounded-pill ms-1"
+                     href="{{ url_for('main.coupon_code_delete', id=cc.id) }}"
+                     onclick="return confirm('Delete this unused coupon code?')">Delete</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-muted small">No coupon codes yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if active_section in ('dashboard', 'masters') %}
+  <div class="col-12 {% if active_section == 'dashboard' %}col-xl-6{% endif %}" id="sectionMasters">
+    <div class="glass-card p-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <h5 class="brand-font mb-0"><i class="bi bi-ticket-perforated me-2 text-primary"></i>Coupon Masters</h5>
+        <div class="d-flex align-items-center gap-2">
+          <div class="text-muted small d-none d-md-block">Define prizes (level, max, image)</div>
+          {% set _next_dir = 'desc' if (m_sort == 'level' and (m_dir|default('asc')) == 'asc') else 'asc' %}
+          <a class="btn btn-sm btn-outline-secondary rounded-pill"
+             href="{{ url_for('main.admin_dashboard', section=active_section, m_sort='level', m_dir=_next_dir) }}#sectionMasters"
+             title="Sort by prize level">
+            Sort by Level {% if m_sort == 'level' %}{% if (m_dir|default('asc')) == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+          <button class="btn btn-sm btn-outline-primary rounded-pill"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#couponMasterManageCollapse"
+                  aria-expanded="{% if edit_coupon_master %}true{% else %}false{% endif %}"
+                  aria-controls="couponMasterManageCollapse">
+            Manage
+          </button>
+        </div>
+      </div>
+
+      <div class="collapse {% if edit_coupon_master %}show{% endif %}" id="couponMasterManageCollapse">
+        <div class="p-3 rounded-4 border bg-white" style="--bs-bg-opacity: .55;">
+          {% if edit_coupon_master %}
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div class="fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Coupon Master</div>
+            <a class="btn btn-sm btn-outline-secondary rounded-pill"
+               href="{{ url_for('main.admin_dashboard', section='masters', m_sort=m_sort, m_dir=m_dir) }}#sectionMasters">
+              Cancel
+            </a>
+          </div>
+          <form class="row g-2 align-items-end" action="{{ url_for('main.coupon_master_update') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="coupon_master_id" value="{{ edit_coupon_master.coupon_master_id }}">
+            <div class="col-12 col-md-5">
+              <label class="form-label">Coupon Name</label>
+              <select class="form-select rounded-pill" name="coupon_name_id" required>
+                {% for cn in coupon_names %}
+                <option value="{{ cn.coupon_name_id }}" {% if edit_coupon_master.coupon_name_id == cn.coupon_name_id %}selected{% endif %}>{{ cn.coupon_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">Type</label>
+              <input class="form-control rounded-pill" name="coupon_type" value="{{ edit_coupon_master.coupon_type }}" required>
+            </div>
+            <div class="col-12 col-md-3">
+              <button class="btn btn-primary-gradient w-100" type="submit">Update</button>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Max</label>
+              <input class="form-control rounded-pill" name="max_allowed" value="{{ edit_coupon_master.max_allowed }}" placeholder="0=unlimited">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Level</label>
+              <input class="form-control rounded-pill" name="prize_level" value="{{ edit_coupon_master.prize_level }}" placeholder="1..7">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Weight</label>
+              <input class="form-control rounded-pill" name="weight" value="{{ edit_coupon_master.weight }}" placeholder="1">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Status</label>
+              <select class="form-select rounded-pill" name="status">
+                <option value="Active" {% if edit_coupon_master.status == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Disabled" {% if edit_coupon_master.status == 'Disabled' %}selected{% endif %}>Disabled</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Prize Image (optional)</label>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <input class="form-control rounded-pill" type="file" name="prize_image" accept=".png,.jpg,.jpeg,.webp">
+                {% if edit_coupon_master.prize_image %}
+                  <a class="btn btn-outline-dark rounded-pill"
+                     href="{{ url_for('main.coupon_master_image', id=edit_coupon_master.coupon_master_id) }}" target="_blank">
+                    View current
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+          <hr class="my-4">
+          {% endif %}
+
+          <form class="row g-2 align-items-end" action="{{ url_for('main.coupon_master_create') }}" method="POST" enctype="multipart/form-data">
+            <div class="col-12 col-md-5">
+              <label class="form-label">Coupon Name</label>
+              <select class="form-select rounded-pill" name="coupon_name_id" required>
+                {% for cn in coupon_names %}
+                <option value="{{ cn.coupon_name_id }}">{{ cn.coupon_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">Type</label>
+              <input class="form-control rounded-pill" name="coupon_type" required>
+            </div>
+            <div class="col-12 col-md-3">
+              <button class="btn btn-primary-gradient w-100" type="submit">Add</button>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Max</label>
+              <input class="form-control rounded-pill" name="max_allowed" placeholder="0=unlimited">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Level</label>
+              <input class="form-control rounded-pill" name="prize_level" placeholder="1..7">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Weight</label>
+              <input class="form-control rounded-pill" name="weight" placeholder="1">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Status</label>
+              <select class="form-select rounded-pill" name="status">
+                <option>Active</option>
+                <option>Disabled</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Prize Image</label>
+              <input class="form-control rounded-pill" type="file" name="prize_image" accept=".png,.jpg,.jpeg,.webp">
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="table-responsive mt-3">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:72px;">Sr No</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Level</th>
+              <th>Weight</th>
+              <th>Max</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in coupon_masters %}
+            <tr>
+              <td class="text-muted small">{{ loop.index }}</td>
+              <td class="small">{{ m.coupon_name.coupon_name }}</td>
+              <td class="fw-bold text-primary">{{ m.coupon_type }}</td>
+              <td class="text-center">{{ m.prize_level }}</td>
+              <td class="text-center">{{ m.weight }}</td>
+              <td class="text-center">{{ m.max_allowed }}</td>
+              <td><span class="badge {% if m.status == 'Active' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ m.status }}</span></td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary rounded-pill"
+                   href="{{ url_for('main.admin_dashboard', section='masters', m_sort=m_sort, m_dir=m_dir, edit_master_id=m.coupon_master_id) }}#couponMasterManageCollapse">
+                  Edit
+                </a>
+                {% if m.prize_image %}
+                  <a class="btn btn-sm btn-outline-dark rounded-pill"
+                     href="{{ url_for('main.coupon_master_image', id=m.coupon_master_id) }}" target="_blank"
+                     title="View prize image">
+                    View
+                  </a>
+                {% endif %}
+                <a class="btn btn-sm btn-outline-danger rounded-pill"
+                   href="{{ url_for('main.coupon_master_delete', id=m.coupon_master_id) }}"
+                   onclick="return confirm('Delete this coupon master?')">Delete</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-muted small">No masters yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if active_section in ('dashboard', 'distribution') %}
+  <div class="col-12" id="sectionDistribution">
+    <div class="glass-card p-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <h5 class="brand-font mb-0"><i class="bi bi-diagram-3 me-2 text-primary"></i>Prize Distribution</h5>
+        <div class="text-muted small">Controls unlock/caps + level frequency</div>
+      </div>
+
+      {% set ds = dist_settings %}
+      {% set unlock_at = ds.unlock_at if ds else 1000 %}
+      {% set w1 = ds.window1_end if ds else 1500 %}
+
+      <div class="p-3 rounded-4 border bg-white mb-3" style="--bs-bg-opacity: .55;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <div class="fw-bold">Monitoring</div>
+            <div class="small text-muted">
+              Revealed scratches for this campaign: <b>{{ dist_total_reveals|default(0) }}</b>
+              {% if dist_total_reveals|default(0) < unlock_at %}
+                (Levels 1-3 locked until {{ unlock_at + 1 }})
+              {% elif dist_total_reveals|default(0) <= w1 %}
+                (Window1 active: {{ unlock_at + 1 }}-{{ w1 }})
+              {% else %}
+                (After Window1: {{ w1 + 1 }}+)
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% if dist_level_stats %}
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          {% for s in dist_level_stats %}
+          <div class="p-2 rounded-4 border bg-white" style="--bs-bg-opacity: .75; min-width: 160px;">
+            <div class="fw-bold">Level {{ s.level }}</div>
+            <div class="small text-muted">
+              Awarded: <b>{{ s.awarded_total }}</b>
+              /
+              {% if s.max_unlimited %}
+                <b>∞</b>
+              {% else %}
+                <b>{{ s.max_total }}</b>
+              {% endif %}
+            </div>
+            <div class="small">
+              Remaining:
+              {% if s.max_unlimited %}
+                <span class="badge text-bg-light text-dark border">Unlimited</span>
+              {% else %}
+                <span class="badge {% if s.remaining <= 5 %}text-bg-warning{% else %}text-bg-success{% endif %}">{{ s.remaining }}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="small text-muted mt-2">Add Coupon Masters (with Level + Max Allowed) to see availability here.</div>
+        {% endif %}
+      </div>
+
+      <form id="distSettingsForm" method="POST" action="{{ url_for('main.distribution_settings_update') }}">
+        <div class="row g-3">
+          <div class="col-12 col-lg-4">
+            <div class="p-3 rounded-4 border bg-white" style="--bs-bg-opacity: .55;">
+              <div class="fw-bold mb-2">Campaign</div>
+              <label class="form-label">Coupon Name</label>
+              <select class="form-select rounded-pill" name="coupon_name_id">
+                {% for cn in coupon_names %}
+                  {% set cn_id = cn.coupon_name_id|string %}
+                  <option value="{{ cn_id }}" {% if dist_coupon_name_id|string == cn_id %}selected{% endif %}>{{ cn.coupon_name }}</option>
+                {% endfor %}
+              </select>
+
+              <hr class="my-3">
+              <div class="fw-bold mb-2">Unlock Window (reveals)</div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <label class="form-label">Unlock At</label>
+                  <input class="form-control rounded-pill" name="unlock_at" value="{{ unlock_at }}" inputmode="numeric">
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Window1 End</label>
+                  <input class="form-control rounded-pill" name="window1_end" value="{{ w1 }}" inputmode="numeric">
+                </div>
+              </div>
+              <div class="small text-muted mt-2" id="distWindowText"></div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="p-3 rounded-4 border bg-white" style="--bs-bg-opacity: .55;">
+              <div class="fw-bold mb-2">Caps (Levels 1–3)</div>
+              <div class="small text-muted mb-2">Caps limit how many prizes of that level can be awarded by that point.</div>
+              <div class="row g-2">
+                <div class="col-6 col-md-3">
+                  <label class="form-label">L1 cap (1001–1500)</label>
+                  <input class="form-control rounded-pill" name="level1_cap_w1" value="{{ ds.level1_cap_w1 if ds else 1 }}" inputmode="numeric">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">L1 cap (after 1500)</label>
+                  <input class="form-control rounded-pill" name="level1_cap_w2" value="{{ ds.level1_cap_w2 if ds else 2 }}" inputmode="numeric">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">L2 cap (1001–1500)</label>
+                  <input class="form-control rounded-pill" name="level2_cap_w1" value="{{ ds.level2_cap_w1 if ds else 2 }}" inputmode="numeric">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label">L3 cap (1001–1500)</label>
+                  <input class="form-control rounded-pill" name="level3_cap_w1" value="{{ ds.level3_cap_w1 if ds else 2 }}" inputmode="numeric">
+                </div>
+              </div>
+
+              <hr class="my-3">
+              <div class="fw-bold mb-2">Level Frequency (Multipliers)</div>
+              <div class="small text-muted mb-2">Effective chance = <b>Prize Weight</b> (Coupon Masters) × <b>Level Multiplier</b> (here). Higher means more common.</div>
+
+              {% set m1 = ds.level1_mult if ds else 0.35 %}
+              {% set m2 = ds.level2_mult if ds else 1.0 %}
+              {% set m3 = ds.level3_mult if ds else 1.8 %}
+              {% set m4 = ds.level4_mult if ds else 0.8 %}
+              {% set m5 = ds.level5_mult if ds else 1.0 %}
+              {% set m6 = ds.level6_mult if ds else 1.3 %}
+              {% set m7 = ds.level7_mult if ds else 1.7 %}
+
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-2">
+                  <thead>
+                    <tr class="small text-muted">
+                      <th style="width: 90px;">Level</th>
+                      <th>Multiplier</th>
+                      <th style="width: 120px;" class="text-end">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for lvl, val in [(1,m1),(2,m2),(3,m3),(4,m4),(5,m5),(6,m6),(7,m7)] %}
+                    <tr>
+                      <td class="fw-bold">L{{ lvl }}</td>
+                      <td>
+                        <input type="range" class="form-range" min="0" max="3" step="0.05"
+                               value="{{ '%.2f'|format(val|float) }}"
+                               data-dist-range="level{{ lvl }}_mult">
+                      </td>
+                      <td class="text-end">
+                        <input class="form-control form-control-sm rounded-pill text-end"
+                               name="level{{ lvl }}_mult"
+                               data-dist-number="level{{ lvl }}_mult"
+                               value="{{ '%.2f'|format(val|float) }}"
+                               inputmode="decimal">
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="small text-muted">
+                <div class="fw-bold">Preview (relative frequency)</div>
+                <div class="text-muted small">Before unlock (L4–L7 only)</div>
+                <div class="dist-bar my-1" id="distPreviewBarBefore"></div>
+                <div class="d-flex flex-wrap gap-2" id="distPreviewBefore"></div>
+                <div class="text-muted small mt-2">After unlock (L1–L7 pool)</div>
+                <div class="dist-bar my-1" id="distPreviewBarAfter"></div>
+                <div class="d-flex flex-wrap gap-2" id="distPreviewAfter"></div>
+              </div>
+
+              <div class="mt-3 p-3 rounded-4 border bg-white" style="--bs-bg-opacity: .6;">
+                <div class="fw-bold mb-1">Plain English</div>
+                <div class="small text-muted" id="distPlainEnglish"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 d-flex flex-wrap gap-2 justify-content-end">
+            <button class="btn btn-primary-gradient px-4" type="submit">Update Settings</button>
+            <a class="btn btn-outline-secondary rounded-pill px-4" href="{{ url_for('main.admin_dashboard', section='distribution', dist_coupon_name_id=dist_coupon_name_id) }}">Reset</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if active_section in ('dashboard', 'validators') %}
+  <div class="col-12" id="sectionValidators">
+    <div class="glass-card p-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <h5 class="brand-font mb-0"><i class="bi bi-shield-check me-2 text-primary"></i>Validators</h5>
+        <div class="d-flex align-items-center gap-2">
+          <div class="text-muted small d-none d-md-block">Eligible mobile numbers</div>
+           <button class="btn btn-sm btn-outline-primary rounded-pill"
+                   type="button"
+                   data-bs-toggle="collapse"
+                   data-bs-target="#validatorManageCollapse"
+                   aria-expanded="{% if edit_coupon_validator %}true{% else %}false{% endif %}"
+                   aria-controls="validatorManageCollapse">
+             Manage
+           </button>
+        </div>
+      </div>
+
+      <div class="collapse {% if edit_coupon_validator %}show{% endif %}" id="validatorManageCollapse">
+        <div class="p-3 rounded-4 border bg-white" style="--bs-bg-opacity: .55;">
+          {% if edit_coupon_validator %}
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div class="fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Validator</div>
+            <a class="btn btn-sm btn-outline-secondary rounded-pill"
+               href="{{ url_for('main.admin_dashboard', section='validators', v_mobile=v_mobile, v_name=v_name, v_city=v_city, v_status=v_status, v_per_page=v_per_page, v_page=v_page) ~ '#validatorsTableTop' }}">
+              Cancel
+            </a>
+          </div>
+          <form class="row g-2 align-items-end" action="{{ url_for('main.coupon_validator_update', id=edit_coupon_validator.id) }}" method="POST">
+            <div class="col-12 col-md-3">
+              <label class="form-label">Mobile</label>
+              <input class="form-control rounded-pill" name="mobile_no" value="{{ edit_coupon_validator.mobile_no }}" placeholder="10 digits" required>
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label">Name</label>
+              <input class="form-control rounded-pill" name="name" value="{{ edit_coupon_validator.name or '' }}" placeholder="Optional">
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label">City</label>
+              <input class="form-control rounded-pill" name="city" value="{{ edit_coupon_validator.city or '' }}" placeholder="Optional">
+            </div>
+            <div class="col-12 col-md-2">
+              <label class="form-label">Status</label>
+              <select class="form-select rounded-pill" name="status">
+                <option value="Active" {% if edit_coupon_validator.status == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Disabled" {% if edit_coupon_validator.status == 'Disabled' %}selected{% endif %}>Disabled</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-1">
+              <button class="btn btn-primary-gradient w-100" type="submit">Save</button>
+            </div>
+          </form>
+          <hr class="my-4">
+          {% endif %}
+
+          <form class="row g-2 align-items-end" action="{{ url_for('main.coupon_validator_create') }}" method="POST">
+            <div class="col-12 col-md-3">
+              <label class="form-label">Mobile</label>
+              <input class="form-control rounded-pill" name="mobile_no" placeholder="10 digits" required>
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label">Name</label>
+              <input class="form-control rounded-pill" name="name" placeholder="Optional">
+            </div>
+            <div class="col-12 col-md-2">
+              <label class="form-label">City</label>
+              <input class="form-control rounded-pill" name="city" placeholder="Optional">
+            </div>
+            <div class="col-12 col-md-2">
+              <label class="form-label">Status</label>
+              <select class="form-select rounded-pill" name="status">
+                <option value="Active">Active</option>
+                <option value="Disabled">Disabled</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-2">
+              <button class="btn btn-primary-gradient w-100" type="submit">Add</button>
+            </div>
+          </form>
+
+          <hr class="my-4">
+          <div class="fw-bold mb-2"><i class="bi bi-upload me-2"></i>Upload Excel</div>
+          <form id="validatorUploadForm" class="row g-2 align-items-end"
+                action="{{ url_for('main.coupon_validator_upload') }}"
+                method="POST" enctype="multipart/form-data">
+            <div class="col-12 col-md-5">
+              <label class="form-label">Excel file (.xlsx)</label>
+              <input id="validatorExcelFile" class="form-control rounded-pill" type="file" name="excel_file" accept=".xlsx" required>
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label">Sheet (optional)</label>
+              <input class="form-control rounded-pill" name="sheet_name" placeholder="Sheet1">
+            </div>
+            <div class="col-12 col-md-2">
+              <label class="form-label">Update existing</label>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1" id="validatorUpdateExisting" name="update_existing">
+                <label class="form-check-label small text-muted" for="validatorUpdateExisting">Yes</label>
+              </div>
+            </div>
+            <div class="col-12 col-md-2">
+              <button id="validatorUploadBtn" class="btn btn-outline-primary w-100 rounded-pill" type="submit">Upload & Import</button>
+            </div>
+          </form>
+          <div id="validatorUploadReport" class="mt-3 d-none"></div>
+        </div>
+      </div>
+
+      {% if active_section == 'validators' %}
+      <form class="row g-2 align-items-end mt-3" method="GET" action="{{ url_for('main.admin_dashboard') }}">
+        <input type="hidden" name="section" value="validators">
+        <input type="hidden" name="v_page" value="1">
+        <div class="col-12 col-md-3">
+          <label class="form-label">Mobile</label>
+          <input class="form-control rounded-pill" name="v_mobile" value="{{ v_mobile|default('') }}" placeholder="10 digits">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Name</label>
+          <input class="form-control rounded-pill" name="v_name" value="{{ v_name|default('') }}" placeholder="Search">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">City</label>
+          <input class="form-control rounded-pill" name="v_city" value="{{ v_city|default('') }}" placeholder="Search">
+        </div>
+        <div class="col-12 col-md-1">
+          <label class="form-label">Status</label>
+          <select class="form-select rounded-pill" name="v_status">
+            <option value="">All</option>
+            <option value="Active" {% if v_status == 'Active' %}selected{% endif %}>Active</option>
+            <option value="Disabled" {% if v_status == 'Disabled' %}selected{% endif %}>Disabled</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Per page</label>
+          <select class="form-select rounded-pill" name="v_per_page">
+            {% set p = v_per_page|string %}
+            <option value="10" {% if p == '10' %}selected{% endif %}>10</option>
+            <option value="25" {% if p == '25' %}selected{% endif %}>25</option>
+            <option value="50" {% if p == '50' %}selected{% endif %}>50</option>
+            <option value="100" {% if p == '100' %}selected{% endif %}>100</option>
+            <option value="200" {% if p == '200' %}selected{% endif %}>200</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button class="btn btn-primary-gradient w-100" type="submit">Apply</button>
+          <a class="btn btn-outline-secondary rounded-pill w-100" href="{{ url_for('main.admin_dashboard', section='validators') }}">Clear</a>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <a class="btn btn-outline-success rounded-pill w-100"
+             href="{{ url_for('main.export_validators', v_mobile=v_mobile, v_name=v_name, v_city=v_city, v_status=v_status) }}">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export
+          </a>
+        </div>
+      </form>
+      {% endif %}
+
+      <div id="validatorsTableTop" class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
+        <div class="text-muted small">Total validators: <b>{{ v_total|default(coupon_validators|length) }}</b></div>
+        {% if active_section == 'validators' and v_total_pages and v_total_pages > 1 %}
+        <div class="text-muted small">Page {{ v_page }} of {{ v_total_pages }}</div>
+        {% endif %}
+      </div>
+
+      {% if active_section == 'validators' and v_total_pages and v_total_pages > 1 %}
+      <div class="d-flex align-items-center justify-content-end flex-wrap gap-2 mt-2">
+        <nav aria-label="Validator pages">
+          <ul class="pagination pagination-sm mb-0">
+            {% set prev_page = v_page - 1 if v_page > 1 else 1 %}
+            {% set next_page = v_page + 1 if v_page < v_total_pages else v_total_pages %}
+            <li class="page-item {% if v_page <= 1 %}disabled{% endif %}">
+              <a class="page-link"
+                 href="{{ url_for('main.admin_dashboard', section='validators', v_mobile=v_mobile, v_name=v_name, v_city=v_city, v_status=v_status, v_per_page=v_per_page, v_page=prev_page) ~ '#validatorsTableTop' }}">Prev</a>
+            </li>
+            <li class="page-item {% if v_page >= v_total_pages %}disabled{% endif %}">
+              <a class="page-link"
+                 href="{{ url_for('main.admin_dashboard', section='validators', v_mobile=v_mobile, v_name=v_name, v_city=v_city, v_status=v_status, v_per_page=v_per_page, v_page=next_page) ~ '#validatorsTableTop' }}">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      <div class="table-responsive mt-3">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:72px;">Sr No</th>
+              <th>Mobile</th>
+              <th>Name</th>
+              <th>City</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in coupon_validators %}
+            <tr>
+              <td class="text-muted small">{{ ((v_page - 1) * v_per_page) + loop.index }}</td>
+              <td><code>{{ v.mobile_no }}</code></td>
+              <td class="small">{{ v.name or '-' }}</td>
+              <td class="small">{{ v.city or '-' }}</td>
+              <td><span class="badge {% if v.status == 'Active' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ v.status }}</span></td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary rounded-pill"
+                   href="{{ url_for('main.admin_dashboard', section='validators', v_mobile=v_mobile, v_name=v_name, v_city=v_city, v_status=v_status, v_per_page=v_per_page, v_page=v_page, edit_validator_id=v.id) ~ '#validatorManageCollapse' }}">
+                  Edit
+                </a>
+                <a class="btn btn-sm btn-outline-danger rounded-pill"
+                   href="{{ url_for('main.coupon_validator_delete', id=v.id) }}"
+                   onclick="return confirm('Delete this validator?')">Delete</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-muted small">No validators yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if active_section in ('dashboard', 'users') %}
+  <div class="col-12" id="sectionUsers">
+    <div class="glass-card p-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <h5 class="brand-font mb-0"><i class="bi bi-people me-2 text-primary"></i>Coupon Users</h5>
+        <div class="text-muted small">Latest scratches</div>
+      </div>
+
+      {% if active_section == 'users' %}
+      <form class="row g-2 align-items-end mt-3" method="GET" action="{{ url_for('main.admin_dashboard') }}">
+        <input type="hidden" name="section" value="users">
+        <input type="hidden" name="cu_page" value="1">
+        <div class="col-12 col-md-3">
+          <label class="form-label">Name</label>
+          <input class="form-control rounded-pill" name="cu_name" value="{{ cu_name|default('') }}" placeholder="Search">
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Mobile</label>
+          <input class="form-control rounded-pill" name="cu_mobile" value="{{ cu_mobile|default('') }}" placeholder="10 digits">
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Coupon</label>
+          <select class="form-select rounded-pill" name="cu_coupon_name_id">
+            <option value="">All</option>
+            {% for cn in coupon_names %}
+              {% set cn_id = cn.coupon_name_id|string %}
+              <option value="{{ cn_id }}" {% if cu_coupon_name_id|string == cn_id %}selected{% endif %}>{{ cn.coupon_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Type</label>
+          <select class="form-select rounded-pill" name="cu_coupon_type">
+            <option value="">All</option>
+            {% for t in coupon_type_options %}
+              <option value="{{ t }}" {% if cu_coupon_type == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Coupon Code</label>
+          <input class="form-control rounded-pill" name="cu_coupon_code" value="{{ cu_coupon_code|default('') }}" placeholder="Used code">
+        </div>
+        <div class="col-12 col-md-1">
+          <label class="form-label">Ref</label>
+          <input class="form-control rounded-pill" name="cu_ref" value="{{ cu_ref|default('') }}" placeholder="12345">
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Group by</label>
+          <select class="form-select rounded-pill" name="cu_group">
+            <option value="" {% if not cu_group %}selected{% endif %}>None</option>
+            <option value="mobile" {% if cu_group == 'mobile' %}selected{% endif %}>Mobile</option>
+            <option value="type" {% if cu_group == 'type' %}selected{% endif %}>Type</option>
+            <option value="code" {% if cu_group == 'code' %}selected{% endif %}>Code</option>
+            <option value="name" {% if cu_group == 'name' %}selected{% endif %}>Name</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Per page</label>
+          <select class="form-select rounded-pill" name="cu_per_page">
+            {% set p = cu_per_page|string %}
+            <option value="10" {% if p == '10' %}selected{% endif %}>10</option>
+            <option value="25" {% if p == '25' %}selected{% endif %}>25</option>
+            <option value="50" {% if p == '50' %}selected{% endif %}>50</option>
+            <option value="100" {% if p == '100' %}selected{% endif %}>100</option>
+            <option value="200" {% if p == '200' %}selected{% endif %}>200</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button class="btn btn-primary-gradient w-100" type="submit">Apply</button>
+          <a class="btn btn-outline-secondary rounded-pill w-100" href="{{ url_for('main.admin_dashboard', section='users') }}">Clear</a>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <a class="btn btn-outline-success rounded-pill w-100"
+             href="{{ url_for('main.export_coupon_users',
+                              cu_name=cu_name, cu_mobile=cu_mobile, cu_coupon_name_id=cu_coupon_name_id,
+                              cu_coupon_type=cu_coupon_type, cu_coupon_code=cu_coupon_code, cu_ref=cu_ref, cu_group=cu_group) }}">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export
+          </a>
+          {% if cu_group %}
+          <a class="btn btn-outline-success rounded-pill w-100"
+             href="{{ url_for('main.export_coupon_users',
+                              cu_name=cu_name, cu_mobile=cu_mobile, cu_coupon_name_id=cu_coupon_name_id,
+                              cu_coupon_type=cu_coupon_type, cu_coupon_code=cu_coupon_code, cu_ref=cu_ref, cu_group=cu_group, include_raw=1) }}">
+            Full
+          </a>
+          {% endif %}
+        </div>
+      </form>
+      {% endif %}
+
+      <div id="usersTableTop" class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
+        <div class="text-muted small">
+          {% if cu_group %}
+            Total groups: <b>{{ cu_total }}</b>
+          {% else %}
+            Total users: <b>{{ cu_total }}</b>
+          {% endif %}
+        </div>
+        {% if active_section == 'users' and cu_total_pages and cu_total_pages > 1 %}
+        <div class="text-muted small">Page {{ cu_page }} of {{ cu_total_pages }}</div>
+        {% endif %}
+      </div>
+
+      {% if active_section == 'users' and cu_total_pages and cu_total_pages > 1 %}
+      <div class="d-flex align-items-center justify-content-end flex-wrap gap-2 mt-2">
+        <nav aria-label="User pages">
+          <ul class="pagination pagination-sm mb-0">
+            {% set prev_page = cu_page - 1 if cu_page > 1 else 1 %}
+            {% set next_page = cu_page + 1 if cu_page < cu_total_pages else cu_total_pages %}
+            <li class="page-item {% if cu_page <= 1 %}disabled{% endif %}">
+              <a class="page-link"
+                 href="{{ url_for('main.admin_dashboard', section='users',
+                                  cu_name=cu_name, cu_mobile=cu_mobile, cu_coupon_name_id=cu_coupon_name_id,
+                                  cu_coupon_type=cu_coupon_type, cu_coupon_code=cu_coupon_code, cu_ref=cu_ref,
+                                  cu_group=cu_group, cu_per_page=cu_per_page, cu_page=prev_page) ~ '#usersTableTop' }}">Prev</a>
+            </li>
+            <li class="page-item {% if cu_page >= cu_total_pages %}disabled{% endif %}">
+              <a class="page-link"
+                 href="{{ url_for('main.admin_dashboard', section='users',
+                                  cu_name=cu_name, cu_mobile=cu_mobile, cu_coupon_name_id=cu_coupon_name_id,
+                                  cu_coupon_type=cu_coupon_type, cu_coupon_code=cu_coupon_code, cu_ref=cu_ref,
+                                  cu_group=cu_group, cu_per_page=cu_per_page, cu_page=next_page) ~ '#usersTableTop' }}">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      <div class="table-responsive mt-3">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              {% if cu_group %}
+                <th style="width:72px;">Sr No</th>
+                <th>Group</th>
+                <th class="text-end">Count</th>
+                <th>First</th>
+                <th>Last</th>
+              {% else %}
+                <th style="width:72px;">Sr No</th>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>Coupon</th>
+                <th>Type</th>
+                <th>Coupon Code</th>
+                <th>Reference</th>
+                <th class="text-end">Actions</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% if cu_group %}
+              {% for row in coupon_user_groups %}
+              <tr>
+                <td class="text-muted small">{{ ((cu_page - 1) * cu_per_page) + loop.index }}</td>
+                <td class="fw-bold">{% if cu_group == 'mobile' %}<code>{{ row.group_value }}</code>{% else %}{{ row.group_value }}{% endif %}</td>
+                <td class="text-end"><span class="badge text-bg-primary">{{ row.count }}</span></td>
+                <td class="small text-muted">{{ row.first_at.strftime('%Y-%m-%d %H:%M') if row.first_at else '-' }}</td>
+                <td class="small text-muted">{{ row.last_at.strftime('%Y-%m-%d %H:%M') if row.last_at else '-' }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="text-muted small">No results for this grouping.</td></tr>
+              {% endfor %}
+            {% else %}
+              {% for cu in coupon_users %}
+              <tr>
+                <td class="text-muted small">{{ ((cu_page - 1) * cu_per_page) + loop.index }}</td>
+                <td class="small">{{ cu.first_name }} {{ cu.last_name }}</td>
+                <td><code>{{ cu.mobile_no }}</code></td>
+                <td class="small">{{ cu.coupon_master.coupon_name.coupon_name if cu.coupon_master else '-' }}</td>
+                <td class="small">{{ cu.coupon_master.coupon_type if cu.coupon_master else '-' }}</td>
+                <td class="small"><code>{{ cu.coupon_code.code if cu.coupon_code else '-' }}</code></td>
+                <td class="fw-bold">{{ cu.unique_code or '-' }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-danger rounded-pill"
+                     href="{{ url_for('main.coupon_user_delete', id=cu.coupon_user_id) }}"
+                     onclick="return confirm('Delete this user entry?')">Delete</a>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" class="text-muted small">No coupon users yet.</td></tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const root = document.getElementById('sectionDistribution');
+    if (!root) return;
+    const form = document.getElementById('distSettingsForm');
+    if (!form) return;
+
+    const windowText = document.getElementById('distWindowText');
+    const barBefore = document.getElementById('distPreviewBarBefore');
+    const barAfter = document.getElementById('distPreviewBarAfter');
+    const previewBefore = document.getElementById('distPreviewBefore');
+    const previewAfter = document.getElementById('distPreviewAfter');
+    const plain = document.getElementById('distPlainEnglish');
+
+    const toInt = (v, d) => {
+      const n = parseInt(('' + (v ?? '')).trim(), 10);
+      return Number.isFinite(n) ? n : d;
+    };
+    const toFloat = (v, d) => {
+      const n = parseFloat(('' + (v ?? '')).trim());
+      return Number.isFinite(n) ? n : d;
+    };
+    const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+
+    const levelColors = {
+      1: '#f59e0b',
+      2: '#10b981',
+      3: '#3b82f6',
+      4: '#8b5cf6',
+      5: '#6366f1',
+      6: '#22c55e',
+      7: '#0ea5e9',
+    };
+
+    const getMult = (lvl) => {
+      const inp = form.querySelector(`[name="level${lvl}_mult"]`);
+      return clamp(toFloat(inp ? inp.value : 1, 1), 0, 3);
+    };
+
+    const buildPreview = (levels, targetBar, targetPills) => {
+      const weights = levels.map(lvl => ({ lvl, w: getMult(lvl) }));
+      const total = weights.reduce((a, r) => a + r.w, 0) || 1;
+      const pcts = weights.map(r => Math.round((r.w / total) * 100));
+      if (targetBar) {
+        targetBar.innerHTML = weights.map((r, i) => {
+          const pct = pcts[i];
+          const color = levelColors[r.lvl] || '#94a3b8';
+          return `<span style="width:${pct}%;background:${color}" title="L${r.lvl}: ${pct}%"></span>`;
+        }).join('');
+      }
+      if (targetPills) {
+        targetPills.innerHTML = weights.map((r, i) => {
+          const pct = pcts[i];
+          const color = levelColors[r.lvl] || '#94a3b8';
+          return `<span class="dist-pill"><span style="width:10px;height:10px;border-radius:999px;background:${color};display:inline-block;"></span>L${r.lvl}: ${pct}%</span>`;
+        }).join('');
+      }
+    };
+
+    const refresh = () => {
+      const unlockAt = toInt(form.querySelector('[name="unlock_at"]')?.value, 1000);
+      const w1 = toInt(form.querySelector('[name="window1_end"]')?.value, 1500);
+
+      const l1w1 = Math.max(0, toInt(form.querySelector('[name="level1_cap_w1"]')?.value, 1));
+      const l1w2 = Math.max(l1w1, toInt(form.querySelector('[name="level1_cap_w2"]')?.value, 2));
+      const l2w1 = Math.max(0, toInt(form.querySelector('[name="level2_cap_w1"]')?.value, 2));
+      const l3w1 = Math.max(0, toInt(form.querySelector('[name="level3_cap_w1"]')?.value, 2));
+
+      if (windowText) {
+        windowText.innerHTML = `
+          <div>Before <b>${unlockAt}</b> reveals: only <b>Levels 4–7</b>.</div>
+          <div>From reveal <b>#${unlockAt + 1}</b> to <b>#${w1}</b> (inclusive): Levels <b>1–3 unlock</b> (caps apply).</div>
+          <div>After reveal <b>#${w1 + 1}</b>: L1 allows one more (total ${l1w2}); L2/L3 continue until Max Allowed.</div>`;
+      }
+
+      buildPreview([4,5,6,7], barBefore, previewBefore);
+      buildPreview([1,2,3,4,5,6,7], barAfter, previewAfter);
+
+      if (plain) {
+        plain.innerHTML = `
+          <div>• Each scratch reveal picks a prize using <b>weighted random</b>.</div>
+          <div>• Effective chance = <b>Prize Weight</b> (in Coupon Masters) × <b>Level Multiplier</b> (here).</div>
+          <div>• Caps are enforced per <b>level total</b>: during ${unlockAt + 1}–${w1} → L1 ≤ ${l1w1}, L2 ≤ ${l2w1}, L3 ≤ ${l3w1}. After ${w1 + 1} → L1 ≤ ${l1w2} total.</div>
+          <div>• Hard safety: no prize exceeds its <b>Max Allowed</b>.</div>`;
+      }
+    };
+
+    root.querySelectorAll('input[data-dist-range]').forEach((range) => {
+      const name = range.getAttribute('data-dist-range');
+      const number = form.querySelector(`input[data-dist-number="${name}"]`);
+      if (!number) return;
+      const apply = (v) => {
+        const val = clamp(toFloat(v, 0), 0, 3);
+        const txt = val.toFixed(2);
+        range.value = txt;
+        number.value = txt;
+        refresh();
+      };
+      range.addEventListener('input', () => apply(range.value));
+      number.addEventListener('input', () => apply(number.value));
+      number.addEventListener('blur', () => apply(number.value));
+    });
+
+    ['unlock_at','window1_end','level1_cap_w1','level1_cap_w2','level2_cap_w1','level3_cap_w1'].forEach((n) => {
+      const el = form.querySelector(`[name="${n}"]`);
+      if (!el) return;
+      el.addEventListener('input', refresh);
+      el.addEventListener('blur', refresh);
+    });
+
+    refresh();
+  })();
+
+  (function () {
+    const form = document.getElementById('validatorUploadForm');
+    const report = document.getElementById('validatorUploadReport');
+    const btn = document.getElementById('validatorUploadBtn');
+    const fileInp = document.getElementById('validatorExcelFile');
+    if (!form || !report) return;
+
+    const esc = (s) => ('' + (s ?? '')).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
+    const render = (data) => {
+      report.classList.remove('d-none');
+      const skipped = Array.isArray(data.skipped_rows) ? data.skipped_rows : [];
+      const warnings = Array.isArray(data.warning_rows) ? data.warning_rows : [];
+      const rows = skipped.slice(0, 200);
+      const warnRows = warnings.slice(0, 50);
+
+      const summary = `
+        <div class="alert ${data.success ? 'alert-success' : 'alert-danger'} rounded-4 mb-3">
+          <div class="fw-bold">${esc(data.success ? 'Upload complete' : 'Upload failed')}</div>
+          <div class="small mt-1">
+            ${data.message ? esc(data.message) + '<br>' : ''}
+            ${data.sheet ? 'Sheet: <code>' + esc(data.sheet) + '</code> · ' : ''}
+            Inserted: <b>${esc(data.inserted ?? 0)}</b> · Updated: <b>${esc(data.updated ?? 0)}</b> ·
+            Skipped existing: <b>${esc(data.skipped_existing ?? 0)}</b> ·
+            Duplicates: <b>${esc(data.skipped_duplicates ?? 0)}</b> ·
+            Invalid: <b>${esc(data.skipped_invalid ?? 0)}</b>
+          </div>
+        </div>`;
+
+      let table = '';
+      if (rows.length) {
+        table = `
+          <div class="fw-bold mb-2">Not inserted (showing ${rows.length}${skipped.length > rows.length ? ' of ' + skipped.length : ''})</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead><tr><th>Row</th><th>Mobile</th><th>Reason</th></tr></thead>
+              <tbody>
+                ${rows.map(r => `
+                  <tr>
+                    <td><code>${esc(r.row)}</code></td>
+                    <td><code>${esc(r.mobile || r.mobile_raw || '')}</code></td>
+                    <td class="small text-muted">${esc(r.reason || '')}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      }
+
+      let warn = '';
+      if (warnRows.length) {
+        warn = `
+          <div class="mt-3 small text-muted">
+            Formatting warnings (showing ${warnRows.length}${warnings.length > warnRows.length ? ' of ' + warnings.length : ''}):
+            <ul class="mb-0">
+              ${warnRows.map(w => `<li>Row ${esc(w.row)}: <code>${esc(w.mobile_raw)}</code> → <code>${esc(w.mobile)}</code> (${esc(w.warning)})</li>`).join('')}
+            </ul>
+          </div>`;
+      }
+
+      report.innerHTML = summary + table + warn;
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!fileInp || !fileInp.files || !fileInp.files.length) {
+        render({ success: false, message: 'Please select an Excel file.' });
+        return;
+      }
+
+      const fd = new FormData(form);
+      report.classList.remove('d-none');
+      report.innerHTML = '<div class="alert alert-info rounded-4 mb-0">Uploading... please wait.</div>';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Uploading...';
+      }
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' },
+          body: fd
+        });
+        const data = await res.json().catch(() => ({}));
+        render(data.success !== undefined ? data : { success: false, message: 'Unexpected server response.' });
+      } catch (err) {
+        render({ success: false, message: 'Upload failed. Please try again.' });
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'Upload & Import';
+        }
+      }
+    });
+  })();
+</script>
+{% endblock %}
