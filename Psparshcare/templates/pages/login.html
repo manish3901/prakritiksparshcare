@@ -1,0 +1,1421 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Login | Prakritik Sparsh Care{% endblock %}
+
+{% block head %}
+<style>
+  :root {
+    --login-ink: #0f172a;
+    --login-muted: #5f6b7a;
+    --login-line: rgba(15, 23, 42, 0.10);
+    --login-card: rgba(255, 255, 255, 0.92);
+    --login-surface: #f5f7fb;
+    --login-navy: #123b68;
+    --login-teal: #1f8f78;
+    --login-pink: #ec4899;
+  }
+
+  .login-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #eef4fb 0%, #eaf1fb 100%);
+    color: var(--login-ink);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .login-shell {
+    flex: 1;
+    padding: 10px;
+  }
+
+  .login-frame {
+    max-width: 1660px;
+    margin: 0 auto;
+    min-height: calc(100vh - 20px);
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(430px, 0.82fr);
+    grid-template-areas:
+      "showcase auth"
+      "details details"
+      "company company";
+    border-radius: 30px;
+    overflow: hidden;
+    background:
+      radial-gradient(760px 340px at 12% 8%, rgba(96, 165, 250, 0.14), transparent 62%),
+      radial-gradient(620px 300px at 88% 18%, rgba(45, 212, 191, 0.08), transparent 60%),
+      radial-gradient(520px 260px at 50% 100%, rgba(236, 72, 153, 0.08), transparent 60%),
+      linear-gradient(145deg, #17385f 0%, #1b3961 38%, #20395c 68%, #1b3150 100%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.12);
+  }
+
+  .showcase-panel {
+    grid-area: showcase;
+    position: relative;
+    padding: 20px 34px 28px;
+    background: transparent;
+    color: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .showcase-panel::before {
+    content: "";
+    position: absolute;
+    inset: auto -10% -18% auto;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.28), transparent 65%);
+    pointer-events: none;
+  }
+
+  .showcase-panel::after {
+    content: "";
+    position: absolute;
+    inset: -12% auto auto -10%;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(31, 143, 120, 0.24), transparent 65%);
+    pointer-events: none;
+  }
+
+  .showcase-topbar {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 12px;
+  }
+
+  .showcase-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .showcase-logo {
+    width: 178px;
+    height: 64px;
+    object-fit: contain;
+    display: block;
+    padding: 0.45rem 0.8rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    box-shadow: 0 14px 28px rgba(7, 17, 33, 0.12);
+  }
+
+  .showcase-brand-copy {
+    min-width: 0;
+  }
+
+  .showcase-brand-copy .eyebrow {
+    display: block;
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.68);
+    margin-bottom: 0.35rem;
+  }
+
+  .showcase-brand-copy .title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .showcase-links {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .showcase-link {
+    color: #fff;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .showcase-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  .showcase-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .showcase-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+    margin-bottom: 0.32rem;
+  }
+
+  .showcase-carousel-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.08rem;
+    width: fit-content;
+  }
+
+  .pulse-highlight {
+    animation: pulseGlow 1.6s ease-out 1;
+    outline: 2px solid rgba(34, 197, 94, 0.55);
+    outline-offset: 6px;
+    border-radius: 20px;
+  }
+
+  @keyframes pulseGlow {
+    0% { box-shadow: 0 0 0 rgba(34, 197, 94, 0.0); transform: translateY(0); }
+    35% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0.10); transform: translateY(-2px); }
+    100% { box-shadow: 0 0 0 rgba(34, 197, 94, 0.0); transform: translateY(0); }
+  }
+
+  .showcase-carousel-label .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.16);
+  }
+
+  .showcase-kicker .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.16);
+  }
+
+  .details-panel {
+    grid-area: details;
+    position: relative;
+    padding: 26px 34px 34px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+    color: #fff;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .details-wrap {
+    max-width: 1340px;
+  }
+
+  .showcase-headline {
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(1.8rem, 2.2vw, 2.35rem);
+    line-height: 1.14;
+    letter-spacing: -0.04em;
+    font-weight: 700;
+    margin: 0 0 0.7rem;
+    max-width: 24ch;
+  }
+
+  .showcase-subcopy {
+    color: rgba(255, 255, 255, 0.76);
+    font-size: 0.93rem;
+    line-height: 1.72;
+    max-width: 74ch;
+    margin-bottom: 1rem;
+  }
+
+  .showcase-points {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .showcase-points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .showcase-points i {
+    color: #7dd3fc;
+    font-size: 1rem;
+    margin-top: 0.2rem;
+  }
+
+  .carousel-spotlight {
+    position: relative;
+    margin-top: 0;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 24px 54px rgba(3, 10, 24, 0.26);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  }
+
+  .carousel-spotlight .carousel-inner,
+  .carousel-spotlight .carousel-item {
+    height: 100%;
+  }
+
+  .carousel-spotlight .carousel-item {
+    min-height: 100%;
+    flex-direction: column;
+  }
+
+  .carousel-spotlight .carousel-item.active,
+  .carousel-spotlight .carousel-item.carousel-item-next,
+  .carousel-spotlight .carousel-item.carousel-item-prev {
+    display: flex;
+  }
+
+  .carousel-spotlight .carousel-media {
+    position: relative;
+    height: 420px;
+    min-height: 420px;
+    max-height: 420px;
+    background-color: rgba(6, 16, 31, 0.46);
+    overflow: hidden;
+  }
+
+  .carousel-spotlight .carousel-media::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--slide-image);
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.08);
+    filter: blur(18px);
+    opacity: 0.58;
+  }
+
+  .carousel-spotlight .carousel-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(6, 16, 31, 0.12), rgba(6, 16, 31, 0.36));
+  }
+
+  .carousel-spotlight .carousel-item img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center;
+    padding: 0;
+    display: block;
+  }
+
+  .carousel-spotlight::after {
+    display: none;
+  }
+
+  .carousel-spotlight .carousel-caption {
+    position: static;
+    display: block !important;
+    text-align: left;
+    padding: 1.05rem 1.5rem 1rem;
+    margin: 0;
+    background: linear-gradient(180deg, rgba(7, 17, 33, 0.72), rgba(7, 17, 33, 0.84));
+    backdrop-filter: blur(10px);
+  }
+
+  .carousel-spotlight .carousel-caption-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .carousel-spotlight .carousel-caption-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .carousel-spotlight .carousel-caption h3 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.32rem;
+    font-weight: 700;
+  }
+
+  .carousel-spotlight .carousel-caption p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.65;
+    font-size: 0.94rem;
+    max-width: 70ch;
+  }
+
+  .carousel-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .carousel-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .carousel-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #fff;
+  }
+
+  .carousel-nav-btn i {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .scroll-cue-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.9rem;
+  }
+
+  .scroll-cue-btn {
+    width: 54px;
+    height: 54px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 16px 30px rgba(7, 17, 33, 0.18);
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    animation: scrollCueFloat 1.8s ease-in-out infinite;
+  }
+
+  .scroll-cue-btn.is-up {
+    animation-name: scrollCueFloatUp;
+  }
+
+  .scroll-cue-btn:hover {
+    color: #fff;
+    transform: translateY(2px);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  .scroll-cue-btn i {
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+  }
+
+  .scroll-cue-btn.is-up i {
+    transform: none;
+  }
+
+  @keyframes scrollCueFloat {
+    0%, 100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(6px);
+    }
+  }
+
+  @keyframes scrollCueFloatUp {
+    0%, 100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  .company-footer-band {
+    grid-area: company;
+    padding: 0 34px 34px;
+    color: #16324f;
+    background: transparent;
+  }
+
+  .company-footer-shell {
+    border-top: 1px solid rgba(22, 50, 79, 0.10);
+    padding-top: 26px;
+  }
+
+  .company-footer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 0.93fr));
+    gap: 18px;
+  }
+
+  .company-footer-card {
+    padding: 1.2rem 1.2rem 1.1rem;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(242, 247, 255, 0.94));
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    box-shadow: 0 20px 36px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(14px);
+    min-height: 100%;
+  }
+
+  .company-footer-card.brand-card {
+    background:
+      radial-gradient(220px 120px at 0% 0%, rgba(125, 211, 252, 0.18), transparent 70%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.98));
+  }
+
+  .company-footer-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6b7d92;
+  }
+
+  .company-footer-eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.16);
+  }
+
+  .company-footer-title {
+    margin: 0 0 0.65rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #16324f;
+  }
+
+  .company-footer-text {
+    margin: 0;
+    color: #52657d;
+    line-height: 1.72;
+    font-size: 0.9rem;
+  }
+
+  .company-footer-text.compact + .company-footer-text.compact {
+    margin-top: 0.45rem;
+  }
+
+  .company-footer-list {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .company-footer-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    color: #4a6078;
+    font-size: 0.9rem;
+  }
+
+  .company-footer-item i {
+    color: #3b82f6;
+    margin-top: 0.15rem;
+  }
+
+  .company-footer-link {
+    color: #16324f;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .company-footer-link:hover {
+    color: #1d4ed8;
+  }
+
+  .company-footer-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .showcase-stats {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .showcase-stat {
+    padding: 1rem 1.05rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.065);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+  }
+
+  .showcase-stat .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.64);
+    margin-bottom: 0.45rem;
+  }
+
+  .showcase-stat .value {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .showcase-stat .note {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.74);
+    margin-top: 0.45rem;
+  }
+
+  .auth-panel {
+    grid-area: auth;
+    position: relative;
+    padding: 18px 24px 24px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 470px;
+    padding: 1.6rem;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 0 18px 46px rgba(15, 23, 42, 0.10);
+    backdrop-filter: blur(18px);
+    margin: 0 auto;
+  }
+
+  .auth-logo {
+    width: 188px;
+    height: 66px;
+    object-fit: contain;
+    margin: 0 auto 1.15rem;
+    display: block;
+  }
+
+  .auth-badge {
+    display: none;
+  }
+
+  .auth-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.35rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    margin: 0 0 0.65rem;
+  }
+
+  .auth-subcopy {
+    color: var(--login-muted);
+    line-height: 1.8;
+    margin-bottom: 1.7rem;
+  }
+
+  .auth-alert {
+    border-radius: 18px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 0.95rem 1rem;
+  }
+
+  .form-label-strong {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.55rem;
+  }
+
+  .input-shell {
+    display: flex;
+    align-items: center;
+    min-height: 58px;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .input-shell:focus-within {
+    border-color: rgba(18, 59, 104, 0.36);
+    box-shadow: 0 0 0 4px rgba(18, 59, 104, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .input-shell .input-icon,
+  .input-shell .input-action {
+    width: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .input-shell .input-action {
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+  }
+
+  .input-shell input {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 0.95rem 0;
+    color: var(--login-ink);
+    min-width: 0;
+  }
+
+  .input-shell input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .auth-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1rem 0 1.4rem;
+  }
+
+  .auth-meta .form-check-label {
+    color: var(--login-muted);
+  }
+
+  .auth-link {
+    color: var(--login-navy);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .auth-link:hover {
+    color: #0d2d4d;
+  }
+
+  .btn-enterprise {
+    width: 100%;
+    border: 0;
+    border-radius: 18px;
+    padding: 0.95rem 1rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    background: linear-gradient(135deg, var(--login-navy), #1b5f99);
+    color: #fff;
+    box-shadow: 0 18px 34px rgba(18, 59, 104, 0.22);
+  }
+
+  .btn-enterprise:hover {
+    color: #fff;
+    filter: brightness(1.03);
+  }
+
+  .auth-support {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.8rem;
+    align-items: center;
+    margin-top: 1.1rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  .active-users-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .active-users-chip .count {
+    color: #1d4ed8;
+    font-weight: 700;
+  }
+
+  .btn-whatsapp-soft {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.85rem 1.1rem;
+    background: linear-gradient(135deg, #128c7e, #22c55e);
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 16px 30px rgba(18, 140, 126, 0.18);
+  }
+
+  .btn-whatsapp-soft:hover {
+    color: #fff;
+    filter: brightness(1.03);
+  }
+
+  .login-footer {
+    padding: 0.7rem 1rem 0.9rem;
+    color: #64748b;
+    text-align: center;
+    font-size: 0.82rem;
+  }
+
+  .modal-content.enterprise-modal {
+    border: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.18);
+  }
+
+  .modal-header-soft {
+    background: linear-gradient(135deg, rgba(18, 59, 104, 0.06), rgba(31, 143, 120, 0.08));
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  }
+
+  @media (max-width: 1199.98px) {
+    .login-frame {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "showcase"
+        "auth"
+        "details"
+        "company";
+    }
+
+    .showcase-panel {
+      min-height: auto;
+    }
+
+    .auth-panel {
+      border-left: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .carousel-spotlight .carousel-item {
+      min-height: 100%;
+    }
+
+    .carousel-spotlight .carousel-item img {
+      height: 100%;
+      min-height: 100%;
+      max-height: 100%;
+    }
+
+    .carousel-spotlight .carousel-media {
+      height: 360px;
+      min-height: 360px;
+      max-height: 360px;
+    }
+
+    .company-footer-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .login-shell {
+      padding: 8px;
+    }
+
+    .showcase-panel,
+    .auth-panel,
+    .details-panel {
+      padding: 22px 18px;
+    }
+
+    .showcase-topbar {
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .showcase-brand {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .showcase-links {
+      justify-content: flex-start;
+    }
+
+    .showcase-headline {
+      max-width: none;
+      font-size: 2.1rem;
+    }
+
+    .showcase-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .carousel-spotlight .carousel-item {
+      min-height: 100%;
+    }
+
+    .carousel-spotlight .carousel-media {
+      height: 280px;
+      min-height: 220px;
+      max-height: 280px;
+    }
+
+    .carousel-spotlight .carousel-item img {
+      height: 100%;
+      min-height: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      padding: 6px;
+    }
+
+    .carousel-spotlight .carousel-caption {
+      padding: 0.95rem 1rem 0.85rem;
+    }
+
+    .carousel-spotlight .carousel-caption-head {
+      gap: 0.75rem;
+    }
+
+    .carousel-nav {
+      gap: 0.4rem;
+    }
+
+    .carousel-nav-btn {
+      width: 36px;
+      height: 36px;
+    }
+
+    .scroll-cue-wrap {
+      margin-top: 0.75rem;
+    }
+
+    .scroll-cue-btn {
+      width: 48px;
+      height: 48px;
+    }
+
+    .company-footer-band {
+      padding: 0 18px 22px;
+    }
+
+    .company-footer-shell {
+      padding-top: 22px;
+    }
+
+    .company-footer-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .auth-card {
+      padding: 1.35rem;
+      border-radius: 24px;
+    }
+
+    .auth-title {
+      font-size: 1.95rem;
+    }
+
+    .auth-meta,
+    .auth-support {
+      grid-template-columns: 1fr;
+      display: grid;
+      justify-content: stretch;
+    }
+
+    .auth-support .btn-whatsapp-soft {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set hero_item = carousel_items[0] if carousel_items else none %}
+{% set hero_image = url_for('static', filename=hero_item.image_path) if hero_item and hero_item.image_path else '' %}
+{% set hero_title = hero_item.title if hero_item and hero_item.title else 'A disciplined wellness network built for long-term growth.' %}
+{% set hero_caption = hero_item.caption if hero_item and hero_item.caption else 'Access your member workspace, manage operations securely, and stay connected with the wider Prakritik Sparsh Care ecosystem.' %}
+{% set company_about = company_profile.about_us if company_profile and company_profile.about_us else 'Prakritik Sparsh Care is building a disciplined wellness network focused on member growth, structured operations, and long-term trust.' %}
+{% set company_vision = company_profile.vision if company_profile and company_profile.vision else 'To create an accessible, dependable, and empowering wellness ecosystem for every connected member.' %}
+{% set company_mission = company_profile.mission if company_profile and company_profile.mission else 'To support members with transparent systems, professional guidance, and operational tools that make daily work easier.' %}
+{% set company_address = company_profile.address if company_profile and company_profile.address else 'Registered office details will appear here once configured by admin.' %}
+{% set company_email = company_profile.email if company_profile and company_profile.email else '' %}
+{% set company_phone = company_profile.phone if company_profile and company_profile.phone else '' %}
+
+<div class="login-page">
+  <div class="login-shell">
+    <div class="login-frame">
+      <section class="showcase-panel">
+        <div class="showcase-topbar">
+          <div class="showcase-brand">
+            <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Prakritik Sparsh Care" class="showcase-logo">
+            <div class="showcase-brand-copy">
+              <span class="eyebrow">Secure Member Access</span>
+              <p class="title mb-0">Prakritik Sparsh Care</p>
+            </div>
+          </div>
+
+          <nav class="showcase-links" aria-label="Public links">
+            <a href="#" class="showcase-link" id="corporateProfileLink">Corporate Profile</a>
+            <a href="#" class="showcase-link" id="supportContactLink">Support Contact</a>
+          </nav>
+        </div>
+
+        <div class="showcase-content">
+          <div class="showcase-kicker">
+            <span class="dot"></span>
+            <span>Welcome to Prakritik Sparsh Care</span>
+          </div>
+
+          <div class="showcase-carousel-label">
+            <span class="live-dot"></span>
+            <span>Featured Highlights</span>
+          </div>
+
+          <div class="carousel-spotlight">
+            <div id="loginHeroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
+              <div class="carousel-inner">
+                {% for item in carousel_items %}
+                <div class="carousel-item {{ 'active' if loop.first }}">
+                  <div class="carousel-media" style="--slide-image: url('{{ url_for('static', filename=item.image_path) }}');">
+                    <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.title }}">
+                  </div>
+                  <div class="carousel-caption">
+                    <div class="carousel-caption-head">
+                      <div class="carousel-caption-copy">
+                        <h3>{{ item.title or 'Prakritik Sparsh Care' }}</h3>
+                      </div>
+                      <div class="carousel-nav">
+                        <button class="carousel-nav-btn" type="button" data-bs-target="#loginHeroCarousel" data-bs-slide="prev" aria-label="Previous slide">
+                          <i class="bi bi-arrow-left"></i>
+                        </button>
+                        <button class="carousel-nav-btn" type="button" data-bs-target="#loginHeroCarousel" data-bs-slide="next" aria-label="Next slide">
+                          <i class="bi bi-arrow-right"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <p>{{ item.caption or 'A trusted wellness network focused on disciplined growth, member operations, and long-term support.' }}</p>
+                  </div>
+                </div>
+                {% else %}
+                <div class="carousel-item active">
+                  <div class="carousel-media" style="--slide-image: url('{{ url_for('static', filename='img/carousal1.jpg') }}');">
+                    <img src="{{ url_for('static', filename='img/carousal1.jpg') }}" alt="Prakritik Sparsh Care highlight">
+                  </div>
+                  <div class="carousel-caption">
+                    <div class="carousel-caption-head">
+                      <div class="carousel-caption-copy">
+                        <h3>Wellness with a stronger member identity</h3>
+                      </div>
+                      <div class="carousel-nav">
+                        <button class="carousel-nav-btn" type="button" data-bs-target="#loginHeroCarousel" data-bs-slide="prev" aria-label="Previous slide">
+                          <i class="bi bi-arrow-left"></i>
+                        </button>
+                        <button class="carousel-nav-btn" type="button" data-bs-target="#loginHeroCarousel" data-bs-slide="next" aria-label="Next slide">
+                          <i class="bi bi-arrow-right"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <p>Experience a more premium entry into the Prakritik Sparsh Care ecosystem with a clear, brand-led visual first impression.</p>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <div class="carousel-media" style="--slide-image: url('{{ url_for('static', filename='img/carousel2.jpg') }}');">
+                    <img src="{{ url_for('static', filename='img/carousel2.jpg') }}" alt="Business operations highlight">
+                  </div>
+                  <div class="carousel-caption">
+                    <div class="carousel-caption-head">
+                      <div class="carousel-caption-copy">
+                        <h3>Operational clarity for every member</h3>
+                      </div>
+                      <div class="carousel-nav">
+                        <button class="carousel-nav-btn" type="button" data-bs-target="#loginHeroCarousel" data-bs-slide="prev" aria-label="Previous slide">
+                          <i class="bi bi-arrow-left"></i>
+                        </button>
+                        <button class="carousel-nav-btn" type="button" data-bs-target="#loginHeroCarousel" data-bs-slide="next" aria-label="Next slide">
+                          <i class="bi bi-arrow-right"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <p>Access hierarchy, support, wallet visibility, and business workflows from one professional member workspace.</p>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+            </div>
+          </div>
+
+          <div class="scroll-cue-wrap">
+            <button type="button" class="scroll-cue-btn" id="scrollToDetailsBtn" aria-label="Scroll to remaining content">
+              <i class="bi bi-chevron-double-down"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="auth-panel">
+        <div class="auth-card">
+          <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Prakritik Sparsh Care" class="auth-logo">
+          <h2 class="auth-title">Sign in to your workspace</h2>
+          <p class="auth-subcopy">
+            Access your account dashboard, team network, wallet details, support tickets, and operational tools from a
+            single secure portal.
+          </p>
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} auth-alert mb-3" role="alert">
+            <i class="bi {% if category == 'danger' %}bi-exclamation-triangle{% else %}bi-check-circle{% endif %} me-2"></i>
+            {{ message }}
+          </div>
+          {% endfor %}
+          {% endif %}
+          {% endwith %}
+
+          <form action="{{ url_for('main.login') }}" method="POST">
+            <div class="mb-3">
+              <label class="form-label-strong">Mobile Number</label>
+              <div class="input-shell">
+                <span class="input-icon"><i class="bi bi-phone"></i></span>
+                <input type="text" name="mobile" placeholder="Enter 10 digit mobile number" pattern="[0-9]{10}" maxlength="10" required>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label-strong">Password</label>
+              <div class="input-shell">
+                <span class="input-icon"><i class="bi bi-lock"></i></span>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <button type="button" class="input-action" onclick="togglePassword()" aria-label="Toggle password visibility">
+                  <i class="bi bi-eye-slash" id="eyeIcon"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="auth-meta">
+              <div class="form-check">
+                <input class="form-check-input border-secondary-subtle" type="checkbox" id="remember">
+                <label class="form-check-label small" for="remember">Keep me signed in on this device</label>
+              </div>
+              <a href="#" class="auth-link">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-enterprise">Sign In Securely</button>
+          </form>
+
+          <div class="auth-support">
+            <div class="active-users-chip">
+              <span>Active Users</span>
+              <span class="count">{{ active_user_count|default(0) }}</span>
+              <span class="small text-muted d-block mt-1" style="font-size: 0.72rem;">
+                Highest: {{ max_visit_count|default(0) }}{% if max_visit_date %} on {{ max_visit_date.strftime('%d %b %Y') }}{% endif %}
+              </span>
+            </div>
+
+            <button type="button" class="btn btn-whatsapp-soft" data-bs-toggle="modal" data-bs-target="#whatsappEnquiryModal">
+              <i class="bi bi-whatsapp me-2"></i>WhatsApp Enquiry
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="details-panel" id="loginDetailsSection">
+        <div class="details-wrap">
+          <h1 class="showcase-headline">A professional gateway for a trusted wellness network.</h1>
+          <p class="showcase-subcopy">
+            Built for members, leaders, and administrators who need a cleaner and more dependable way to access
+            profile management, hierarchy workflows, wallet actions, and operational tools.
+          </p>
+
+          <ul class="showcase-points">
+            <li>
+              <i class="bi bi-shield-check"></i>
+              <span>Secure account access with a cleaner experience built for daily business use.</span>
+            </li>
+            <li>
+              <i class="bi bi-diagram-3"></i>
+              <span>Connected workflows for member hierarchy, approvals, pin operations, and team visibility.</span>
+            </li>
+            <li>
+              <i class="bi bi-clipboard-data"></i>
+              <span>Structured management tools designed to feel credible, calm, and company-grade.</span>
+            </li>
+          </ul>
+
+          <div class="showcase-stats">
+            <div class="showcase-stat">
+              <div class="label">Portal Access</div>
+              <div class="value">24/7</div>
+              <div class="note">Always available for member operations</div>
+            </div>
+            <div class="showcase-stat">
+              <div class="label">Active Users</div>
+              <div class="value">{{ active_user_count|default(0) }}</div>
+              <div class="note">Live count visible at login</div>
+              <div class="note">
+                Highest visitors: <strong>{{ max_visit_count|default(0) }}</strong>
+                {% if max_visit_date %}<span class="text-muted">on {{ max_visit_date.strftime('%d %b %Y') }}</span>{% endif %}
+              </div>
+            </div>
+            <div class="showcase-stat">
+              <div class="label">Core Modules</div>
+              <div class="value">6+</div>
+              <div class="note">Profile, hierarchy, wallet, pins, support, levels</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="company-footer-band">
+      <div class="company-footer-shell">
+        <div class="company-footer-grid">
+          <div class="company-footer-card brand-card">
+            <div class="company-footer-eyebrow">Company Overview</div>
+            <h3 class="company-footer-title">Prakritik Sparsh Care Pvt. Ltd.</h3>
+            <p class="company-footer-text">{{ company_about }}</p>
+          </div>
+
+          <div class="company-footer-card">
+            <div class="company-footer-eyebrow">Vision</div>
+            <h3 class="company-footer-title">What We Are Building</h3>
+            <p class="company-footer-text">{{ company_vision }}</p>
+          </div>
+
+          <div class="company-footer-card">
+            <div class="company-footer-eyebrow">Mission</div>
+            <h3 class="company-footer-title">How We Operate</h3>
+            <p class="company-footer-text">{{ company_mission }}</p>
+          </div>
+
+          <div class="company-footer-card" id="loginContactCard">
+            <div class="company-footer-eyebrow">Contact</div>
+            <h3 class="company-footer-title">Address & Support</h3>
+            <div class="company-footer-list">
+              <div class="company-footer-item">
+                <i class="bi bi-geo-alt"></i>
+                <span>{{ company_address }}</span>
+              </div>
+              <div class="company-footer-item">
+                <i class="bi bi-telephone"></i>
+                {% if company_phone %}
+                <a href="tel:{{ company_phone }}" class="company-footer-link">{{ company_phone }}</a>
+                {% else %}
+                <span>Phone number not configured yet.</span>
+                {% endif %}
+              </div>
+              <div class="company-footer-item">
+                <i class="bi bi-envelope"></i>
+                {% if company_email %}
+                <a href="mailto:{{ company_email }}" class="company-footer-link">{{ company_email }}</a>
+                {% else %}
+                <span>Email address not configured yet.</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="company-footer-actions">
+          <button type="button" class="scroll-cue-btn is-up" id="scrollToTopBtn" aria-label="Scroll back to top">
+            <i class="bi bi-chevron-double-up"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+    </div>
+  </div>
+
+  <footer class="login-footer">
+    <strong>Prakritik Sparsh Care Pvt. Ltd.</strong> | Incorporated {{ current_year|default(2026) }}
+  </footer>
+</div>
+
+<div class="modal fade" id="whatsappEnquiryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content enterprise-modal">
+      <div class="modal-header modal-header-soft px-4 py-3">
+        <div>
+          <h5 class="fw-bold mb-1"><i class="bi bi-whatsapp text-success me-2"></i>WhatsApp Enquiry</h5>
+          <p class="text-muted small mb-0">Share your details directly with the admin contact.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="p-4">
+        <form action="{{ url_for('main.login_whatsapp_enquiry') }}" method="POST" target="_blank">
+          <div class="mb-3">
+            <label class="form-label-strong">Name</label>
+            <input name="name" class="form-control rounded-4" placeholder="Enter your name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label-strong">Mobile Number</label>
+            <input name="mobile" class="form-control rounded-4" placeholder="Enter 10 digit mobile number" pattern="[0-9]{10}" maxlength="10" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label-strong">Enquiry Details</label>
+            <textarea name="enquiry_details" class="form-control rounded-4" rows="4" placeholder="Write your enquiry" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-whatsapp-soft w-100" {% if not whatsapp_admin_number %}disabled{% endif %}>
+            <i class="bi bi-send me-2"></i>Share With Admin
+          </button>
+          {% if not whatsapp_admin_number %}
+          <div class="small text-danger text-center mt-2">Admin WhatsApp number is not configured yet.</div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function togglePassword() {
+    const pwd = document.getElementById('password');
+    const eye = document.getElementById('eyeIcon');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      eye.classList.replace('bi-eye-slash', 'bi-eye');
+    } else {
+      pwd.type = 'password';
+      eye.classList.replace('bi-eye', 'bi-eye-slash');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const scrollBtn = document.getElementById('scrollToDetailsBtn');
+    const scrollTopBtn = document.getElementById('scrollToTopBtn');
+    const detailsSection = document.getElementById('loginDetailsSection');
+    const corporateProfileLink = document.getElementById('corporateProfileLink');
+    const supportContactLink = document.getElementById('supportContactLink');
+    const contactCard = document.getElementById('loginContactCard');
+    const arrowIcon = scrollBtn ? scrollBtn.querySelector('i') : null;
+    const upThreshold = 260;
+
+    if (!scrollBtn || !detailsSection) {
+      return;
+    }
+
+    function syncScrollCue() {
+      const shouldPointUp = window.scrollY > upThreshold;
+      scrollBtn.classList.toggle('is-up', shouldPointUp);
+      scrollBtn.setAttribute('aria-label', shouldPointUp ? 'Scroll back to top' : 'Scroll to remaining content');
+
+      if (arrowIcon) {
+        arrowIcon.className = shouldPointUp ? 'bi bi-chevron-double-up' : 'bi bi-chevron-double-down';
+      }
+    }
+
+    scrollBtn.addEventListener('click', function () {
+      if (window.scrollY > upThreshold) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        detailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    if (scrollTopBtn) {
+      scrollTopBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    window.addEventListener('scroll', syncScrollCue, { passive: true });
+    syncScrollCue();
+
+    function pulseHighlight(el) {
+      if (!el) return;
+      el.classList.remove('pulse-highlight');
+      // reflow
+      void el.offsetWidth;
+      el.classList.add('pulse-highlight');
+      window.setTimeout(() => el.classList.remove('pulse-highlight'), 1600);
+    }
+
+    if (corporateProfileLink) {
+      corporateProfileLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (detailsSection) detailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    if (supportContactLink) {
+      supportContactLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (contactCard) {
+          contactCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          pulseHighlight(contactCard);
+        } else if (detailsSection) {
+          detailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

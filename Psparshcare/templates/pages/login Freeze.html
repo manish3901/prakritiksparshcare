@@ -1,0 +1,101 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Login | Prakrutik SparshCare{% endblock %}
+
+{% block content %}
+<div class="login-container">
+  <!-- Animated Background Shapes -->
+  <div class="shape shape-1"></div>
+  <div class="shape shape-2"></div>
+
+  <div class="login-content glass-card">
+    <!-- Left Side: Login Form -->
+    <div class="login-left">
+      <div class="login-header">
+        <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo"
+          style="height: 60px; margin-bottom: 20px;">
+        <h2>Welcome Back</h2>
+        <p>Please login to your account</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+
+      <form action="{{ url_for('main.login') }}" method="POST" novalidate autocomplete="off">
+        <div class="mb-3">
+          <input type="text" class="form-control" id="mobile" name="mobile" placeholder="Mobile Number"
+            pattern="[0-9]{10}" maxlength="10" required>
+        </div>
+
+        <div class="mb-4 position-relative">
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+          <span class="position-absolute top-50 end-0 translate-middle-y me-3" onclick="togglePassword()"
+            style="cursor:pointer; z-index: 10;">
+            <i class="bi bi-eye-slash" id="eyeIcon"></i>
+          </span>
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary-custom">Sign In</button>
+        </div>
+
+        <div class="text-center mt-4">
+          <a href="#" class="text-decoration-none text-muted small">Forgot Password?</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right Side: Image/Branding -->
+    <div class="login-right p-0">
+      <div id="showcaseCarousel" class="carousel slide h-100" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#showcaseCarousel" data-bs-slide-to="0" class="active"></button>
+          <button type="button" data-bs-target="#showcaseCarousel" data-bs-slide-to="1"></button>
+        </div>
+
+        <div class="carousel-inner h-100">
+          <div class="carousel-item active h-100">
+            <img src="{{ url_for('static', filename='img/carousal1.jpg') }}" class="d-block w-100 h-100" alt="Slide 1"
+              style="object-fit: fill;">
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{{ url_for('static', filename='img/carousel2.jpg') }}" class="d-block w-100 h-100" alt="Slide 2"
+              style="object-fit: fill;">
+          </div>
+        </div>
+
+        <button class="carousel-control-prev" type="button" data-bs-target="#showcaseCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#showcaseCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function togglePassword() {
+    const pwd = document.getElementById("password");
+    const eye = document.getElementById("eyeIcon");
+    if (pwd.type === "password") {
+      pwd.type = "text";
+      eye.classList.replace("bi-eye-slash", "bi-eye");
+    } else {
+      pwd.type = "password";
+      eye.classList.replace("bi-eye", "bi-eye-slash");
+    }
+  }
+</script>
+{% endblock %}

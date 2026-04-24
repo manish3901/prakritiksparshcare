@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+.Python
+
+# Virtual env
+venv/
+.venv/
+
+# Env / secrets
+.env
+*.env
+
+# Git metadata when using --separate-git-dir
+.gitmeta/
+gitmeta/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local artifacts
+deploy/dumps/
+*.log
+
+# Old/local folders not needed in git
+Freeze/
+Other(NR)/
+Other(NR)/**
+prize images/
+prize images/**
+
+# Uploads (stored on server disk, not in git)
+Psparshcare/static/uploads/
+psc_coupens/psc_coupens_app/static/uploads/
+
+# Large / local files
+*.xlsx
+*.docx
+
+# Local helper scripts / scratch files (not needed for production deploy)
+add_columns.py
+app1.py
+check_db.py
+schema_manager.py
+seed_profile.py
+test.py
+tmp_script.py
+import_coupon_validators_excel.py
+psc.sql
+structure.txt
+update_*.py

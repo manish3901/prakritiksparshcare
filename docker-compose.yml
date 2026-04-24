@@ -1,0 +1,41 @@
+services:
+  psc_web:
+    build: .
+    container_name: psc_web
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: "${SECRET_KEY:-dev_secret}"
+      PSC_DATABASE_URL: "${PSC_DATABASE_URL:-postgresql+psycopg2://psc_main_user:${PSC_DB_PASSWORD}@psc_db:5432/psc_main}"
+      COUPON_DATABASE_URL: "${COUPON_DATABASE_URL:-postgresql+psycopg2://psc_coupon_user:${COUPON_DB_PASSWORD}@psc_db:5432/psc_coupon}"
+      COUPON_ENGINE_ADMIN_URL: "${COUPON_ENGINE_ADMIN_URL:-/external-coupen-system/admin}"
+      COUPON_ENGINE_PUBLIC_URL: "${COUPON_ENGINE_PUBLIC_URL:-/external-coupen-system/coupon/entry}"
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - psc_db
+    volumes:
+      # Persist user uploads on the host (VPS) so redeploys do not wipe files.
+      - ./Psparshcare/static/uploads:/app/Psparshcare/static/uploads
+      - ./psc_coupens/psc_coupens_app/static/uploads:/app/psc_coupens/psc_coupens_app/static/uploads
+
+  # Single Postgres server (cheaper + less RAM). We keep two separate databases:
+  # - psc_main (main portal)
+  # - psc_coupon (coupon engine)
+  psc_db:
+    image: postgres:16
+    container_name: psc_db
+    restart: unless-stopped
+    environment:
+      # Superuser for init scripts and admin tasks. Apps connect using the per-db users below.
+      POSTGRES_DB: "psc_main"
+      POSTGRES_USER: "psc_admin"
+      POSTGRES_PASSWORD: "${PSC_DB_PASSWORD}"
+      PSC_DB_PASSWORD: "${PSC_DB_PASSWORD}"
+      COUPON_DB_PASSWORD: "${COUPON_DB_PASSWORD}"
+    volumes:
+      - psc_db_data:/var/lib/postgresql/data
+      - ./deploy/initdb:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  psc_db_data:

@@ -1,0 +1,239 @@
+/* Mobile-first overrides for Prakritik Sparsh Care.
+   Goal: better usability on phones without rewriting templates.
+   Desktop stays largely the same; we only adjust at smaller breakpoints. */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.required-asterisk {
+  color: #ef4444;
+  font-weight: 900;
+  margin-left: 0.2rem;
+}
+
+.psc-kpi-card {
+  height: 100%;
+}
+
+.psc-kpi-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.psc-action-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px !important;
+  font-weight: 750;
+  font-size: 0.92rem;
+  padding: 0.52rem 1.05rem !important;
+  min-height: 42px !important;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.psc-action-pill .badge {
+  line-height: 1;
+}
+
+.login-page {
+  /* Better behavior on mobile browsers with dynamic toolbars */
+  min-height: 100dvh;
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --psc-tap: 44px;
+  }
+
+  /* Consistent pill action buttons (used in headers/section actions) */
+  .psc-action-pill {
+    padding: 0.6rem 1.15rem !important;
+    min-height: 44px !important;
+    font-size: 0.95rem;
+  }
+
+  .modal-actions {
+    justify-content: center !important;
+  }
+
+  /* Header + content padding */
+  .header-premium {
+    padding: 0.75rem 1rem;
+  }
+
+  .header-premium h4 {
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  .breadcrumb {
+    font-size: 0.85rem;
+  }
+
+  .main-content-premium {
+    padding: 0.5rem 1rem 1.25rem;
+  }
+
+  .psc-kpi-label {
+    font-size: 0.8rem;
+  }
+
+  /* Offcanvas width for mobile navigation */
+  .offcanvas-start {
+    width: min(88vw, 340px);
+  }
+
+  .nav-link-premium {
+    padding: 0.85rem 1rem;
+  }
+
+  .nav-link-premium i {
+    margin-right: 0.8rem;
+  }
+
+  /* Reduce heavy padding on cards that use Bootstrap spacing helpers */
+  .glass-card.p-4 {
+    padding: 1rem !important;
+  }
+
+  .glass-card.p-5 {
+    padding: 1.25rem !important;
+  }
+
+  /* Prevent iOS Safari zoom on input focus */
+  .form-control,
+  .form-select,
+  .input-group-text,
+  textarea.form-control {
+    font-size: 16px;
+  }
+
+  /* Better tap targets (keep table buttons compact) */
+  .btn:not(.btn-sm):not(.btn-close) {
+    min-height: var(--psc-tap);
+  }
+
+  .btn-sm {
+    min-height: 36px;
+  }
+
+  /* Tables: ensure horizontal scroll works on small screens */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-responsive > .table,
+  .table-responsive > table {
+    min-width: 720px;
+  }
+
+  /* Some cards use overflow-hidden which hides scrollbars on mobile. */
+  .glass-card.overflow-hidden,
+  .accordion-item.overflow-hidden {
+    overflow: visible !important;
+  }
+
+  /* Modals: tighter margins/padding on phones */
+  .modal-dialog {
+    margin: 0.5rem auto;
+  }
+
+  /* Make modal header/actions feel centered (premium mobile pattern) */
+  .modal .modal-header {
+    position: relative;
+    justify-content: center;
+    text-align: center;
+    padding-right: 3.25rem;
+  }
+
+  .modal .modal-header .modal-title {
+    width: 100%;
+    text-align: center;
+  }
+
+  .modal .modal-header .btn-close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+  }
+
+  .modal .modal-content form .d-flex.justify-content-end {
+    justify-content: center !important;
+    flex-wrap: wrap;
+  }
+
+  .modal .modal-content form .d-flex.justify-content-end > .btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
+
+  .modal-content.p-4 {
+    padding: 1rem !important;
+  }
+
+  .modal-content {
+    border-radius: 1.25rem;
+  }
+
+  /* Large hero sections */
+  .story-hero {
+    min-height: auto !important;
+    margin: 0.75rem !important;
+    border-radius: 1.75rem;
+  }
+
+  .story-overlay {
+    padding: 1.75rem 1.1rem !important;
+  }
+
+  .story-content p {
+    font-size: 1rem !important;
+    line-height: 1.75 !important;
+  }
+
+  .event-carousel img {
+    height: 200px !important;
+  }
+
+  /* Login page refinements */
+  .login-shell {
+    padding: 8px;
+  }
+
+  .login-frame {
+    min-height: calc(100dvh - 16px);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .main-content-premium {
+    padding: 0.5rem 0.75rem 1.25rem;
+  }
+
+  .header-premium {
+    padding: 0.7rem 0.75rem;
+  }
+
+  /* Make round icon buttons consistently tappable */
+  .header-premium .btn.rounded-circle {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Login page */
+  .login-shell {
+    padding: 6px;
+  }
+}
