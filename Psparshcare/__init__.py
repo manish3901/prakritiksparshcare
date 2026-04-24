@@ -40,13 +40,18 @@ def ensure_user_login_level_column(app: Flask):
             return
 
         columns = {col_info['name'] for col_info in inspector.get_columns('user_login')}
-        with engine.begin() as conn:
-            if 'level' not in columns:
-                conn.execute(text("ALTER TABLE user_login ADD COLUMN level INTEGER NOT NULL DEFAULT 1;"))
-                app.logger.info("Added missing user_login.level column via auto-migration.")
+        try:
+            with engine.begin() as conn:
+                if 'level' not in columns:
+                    conn.execute(text("ALTER TABLE user_login ADD COLUMN level INTEGER NOT NULL DEFAULT 1;"))
+                    app.logger.info("Added missing user_login.level column via auto-migration.")
 
-            conn.execute(text("ALTER TABLE user_login ALTER COLUMN level SET DEFAULT 1;"))
-            conn.execute(text("UPDATE user_login SET level = 1 WHERE level IS NULL OR level < 1;"))
+                conn.execute(text("ALTER TABLE user_login ALTER COLUMN level SET DEFAULT 1;"))
+                conn.execute(text("UPDATE user_login SET level = 1 WHERE level IS NULL OR level < 1;"))
+        except Exception:
+            # Do not crash the app if the connected DB user doesn't have DDL privileges
+            # (this can happen after restoring DB dumps with different owners).
+            app.logger.exception("Skipping ensure_user_login_level_column due to DB permissions or engine error.")
 
 
 def ensure_user_login_columns(app: Flask):
@@ -139,21 +144,32 @@ def ensure_schema_bootstrap(app: Flask):
         try:
             conn.execute(text("SELECT pg_advisory_lock(:k)"), {"k": lock_key})
 
-            ensure_base_schema(app)
-            ensure_user_login_level_column(app)
-            ensure_user_login_columns(app)
-            ensure_level_plans_table(app)
-            ensure_user_creation_requests_table(app)
-            ensure_user_creation_request_columns(app)
-            ensure_reference_tables(app)
-            ensure_epin_columns(app)
-            ensure_epin_transfer_columns(app)
-            ensure_pin_usage_table(app)
-            ensure_legal_documents_table(app)
-            ensure_withdraw_requests_table(app)
-            ensure_login_page_visits_table(app)
-            ensure_referral_paid_column(app)
-            ensure_emp_id_sequence(app)
+            def _best_effort(label: str, fn, critical: bool = False):
+                try:
+                    fn(app)
+                except Exception:
+                    app.logger.exception("Auto-migration failed (%s).", label)
+                    if critical:
+                        raise
+
+            # Base schema is required on a fresh install; if it fails, we should crash loudly.
+            _best_effort("base_schema", ensure_base_schema, critical=True)
+
+            # Everything else is additive migration. If permissions prevent DDL, we log and continue.
+            _best_effort("user_login_level", ensure_user_login_level_column)
+            _best_effort("user_login_columns", ensure_user_login_columns)
+            _best_effort("level_plans", ensure_level_plans_table)
+            _best_effort("user_creation_requests", ensure_user_creation_requests_table)
+            _best_effort("user_creation_request_columns", ensure_user_creation_request_columns)
+            _best_effort("reference_tables", ensure_reference_tables)
+            _best_effort("epin_columns", ensure_epin_columns)
+            _best_effort("epin_transfer_columns", ensure_epin_transfer_columns)
+            _best_effort("pin_usage_table", ensure_pin_usage_table)
+            _best_effort("legal_documents_table", ensure_legal_documents_table)
+            _best_effort("withdraw_requests_table", ensure_withdraw_requests_table)
+            _best_effort("login_page_visits_table", ensure_login_page_visits_table)
+            _best_effort("referral_paid_column", ensure_referral_paid_column)
+            _best_effort("emp_id_sequence", ensure_emp_id_sequence)
         finally:
             try:
                 conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": lock_key})
