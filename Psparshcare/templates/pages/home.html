@@ -310,6 +310,32 @@
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body pt-0">
+      <div class="portal-brand-wrap mt-2">
+        <div class="portal-user-card">
+          <div class="portal-user-top">
+            <div class="portal-user-avatar">
+              <i class="bi bi-person-vcard"></i>
+            </div>
+            <div class="text-start min-w-0">
+              <span class="portal-user-name">{{ session.get('user_name', profile.name)|default('User') }}</span>
+              <span class="portal-user-subline">{{ sidebar_user_type }}</span>
+              <span class="portal-user-subline">{{ current_user_product_display }}</span>
+              <span class="portal-user-idline">ID: {{ sidebar_user_id }}</span>
+            </div>
+          </div>
+
+          <div class="portal-user-grid text-start">
+            <div class="portal-user-stat">
+              <span class="portal-user-label">Balance</span>
+              <span class="portal-user-value">{{ sidebar_balance }}</span>
+            </div>
+            <div class="portal-user-stat">
+              <span class="portal-user-label">Level</span>
+              <span class="portal-user-value">{{ sidebar_level }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <nav class="nav flex-column" id="mobileNav">
         <div class="sidebar-category">Main Portal</div>
         {% set nav_items = [
