@@ -2802,7 +2802,7 @@ def user_delete(id):
     name = user.name
     parent_user_id = user.parent_user_id
     reassigned_children_count = user.children.count()
-    
+
     from .models import (
         UserProfile, AccountSettings, SupportTicket, WalletTransaction,
         PinUsageReport, EPinTransfer, WithdrawRequest
@@ -2830,6 +2830,14 @@ def user_delete(id):
     PinUsageReport.query.filter_by(user_id=id).delete(synchronize_session=False)
     owned_pin_ids = [row[0] for row in db.session.query(EPin.id).filter_by(owner_id=id).all()]
     if owned_pin_ids:
+        # Some user creation requests (raised by other users) can reference pins owned by this user.
+        # Null out the FK so we can safely delete those pins without breaking integrity.
+        UserCreationRequest.query.filter(
+            UserCreationRequest.selected_epin_id.in_(owned_pin_ids)
+        ).update(
+            {UserCreationRequest.selected_epin_id: None},
+            synchronize_session=False
+        )
         PinUsageReport.query.filter(PinUsageReport.pin_id.in_(owned_pin_ids)).delete(synchronize_session=False)
         EPinTransfer.query.filter(EPinTransfer.epin_id.in_(owned_pin_ids)).delete(synchronize_session=False)
     EPinTransfer.query.filter(
@@ -2839,7 +2847,7 @@ def user_delete(id):
 
     db.session.delete(user)
     db.session.commit()
-    
+
     if reassigned_children_count > 0:
         session['user_action_msg'] = f"User {name} deleted successfully. {reassigned_children_count} direct downline user(s) were reassigned to the parent hierarchy."
     else:

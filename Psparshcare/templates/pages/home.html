@@ -1862,21 +1862,22 @@
             </form>
 
             <div class="table-responsive">
-              <table class="table table-hover align-middle" style="font-size: 0.85rem;" id="userMgmtTable">
-                <thead class="bg-light bg-opacity-50">
-                  <tr>
-                    <th>Emp ID</th>
-                    <th>User Identity</th>
-                    <th>Contact Info</th>
-                    <th>Location & Type</th>
-                    <th>Product Details</th>
-                    <th class="text-center">Level</th>
-                    <th>Approval</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="userMgmtTableBody">
+                <table class="table table-hover align-middle" style="font-size: 0.85rem;" id="userMgmtTable">
+                  <thead class="bg-light bg-opacity-50">
+                    <tr>
+                      <th>Emp ID</th>
+                      <th>User Identity</th>
+                      <th>Contact Info</th>
+                      <th>Location & Type</th>
+                      <th>Product Details</th>
+                      <th class="text-center">Level</th>
+                      <th>Approval</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th class="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userMgmtTableBody">
                   {% for u in user_list %}
                   <tr data-name="{{ (u.name or '')|lower }}" data-mobile="{{ u.mobile or '' }}"
                     data-city="{{ (u.city or '')|lower }}" data-product="{{ (u.product_type or '')|lower }}"
@@ -1919,6 +1920,9 @@
                         <label class="x-small fw-bold">{{ u.status }}</label>
                       </div>
                     </td>
+                    <td class="small text-muted">
+                      {{ u.created_at.strftime('%d %b %Y') if u.created_at else '--' }}
+                    </td>
                     <td class="text-end">
                       <div class="d-flex gap-2 justify-content-end">
                         <button class="btn btn-sm btn-white border rounded-circle" data-bs-toggle="modal"
@@ -1944,11 +1948,11 @@
                   </tr>
                   {% else %}
                   <tr>
-                    <td colspan="9" class="text-center py-5 text-muted">No users found matching your criteria.</td>
+                    <td colspan="10" class="text-center py-5 text-muted">No users found matching your criteria.</td>
                   </tr>
                   {% endfor %}
                   <tr id="userMgmtNoResults" class="d-none">
-                    <td colspan="9" class="text-center py-5 text-muted">No users found matching your criteria.</td>
+                    <td colspan="10" class="text-center py-5 text-muted">No users found matching your criteria.</td>
                   </tr>
                 </tbody>
               </table>
@@ -3348,7 +3352,8 @@
         <div class="mb-3">
           <div class="small fw-semibold text-uppercase text-muted mb-2">Delete effects</div>
           <ul class="small text-muted ps-3 mb-0">
-            <li>The user login and their own linked records will be deleted permanently.</li>
+            <li>The user login and their linked records will be deleted permanently.</li>
+            <li>Pins owned by this user and related usage/transfer logs will be deleted.</li>
             <li>Their direct downline users will not be deleted.</li>
             <li>Direct downline users will be reassigned to this user’s parent in the hierarchy.</li>
             <li>This action cannot be undone.</li>
