@@ -1,5 +1,5 @@
 # routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, jsonify
 from datetime import datetime, timedelta, date
 import os
 import secrets
@@ -90,7 +90,8 @@ def send_user_credentials(name, mobile, password, role, recipient_email=None, no
 
 
 def is_admin_session():
-    return session.get('user_role') == 'admin' or session.get('user_id') == 1
+    # Backward-compatible helper: treat "admin" as a DB role, not a special user id.
+    return is_admin_user(get_session_user())
 
 
 def get_session_user():
@@ -1240,6 +1241,28 @@ def user_request_create():
     session['user_action_msg'] = "Your new user request was submitted successfully and sent to admin for approval."
     return redirect_home_with_target(return_target)
 
+
+@main.route('/admin/pending-requests/status', methods=['GET'])
+def admin_pending_requests_status():
+    """
+    Lightweight endpoint for the admin UI to poll and detect new approval requests.
+
+    The portal is largely server-rendered; without polling, an admin who keeps the
+    page open will not see new DB rows until they refresh.
+    """
+    current_user = get_session_user()
+    if not is_admin_user(current_user):
+        return jsonify({"error": "forbidden"}), 403
+
+    q = UserCreationRequest.query.filter_by(status='Pending')
+    count = q.count()
+    latest = q.order_by(UserCreationRequest.created_at.desc()).first()
+    return jsonify({
+        "count": int(count),
+        "latest_id": int(latest.id) if latest else None,
+        "latest_created_at": latest.created_at.isoformat() if (latest and latest.created_at) else None,
+    })
+
 def get_home_context():
     """Assembles real database data for the portal with placeholder fallbacks."""
     from .models import (
@@ -1690,7 +1713,8 @@ def get_home_context():
     user_roles = UserRole.query.order_by(UserRole.name).all()
     schema_data = SchemaMeta.query.all()
     pending_requests = []
-    if session.get('user_role') == 'admin' or session.get('user_id') == 1:
+    # Use DB-backed admin detection; session flags can be missing/stale.
+    if is_admin_view:
         pending_requests = UserCreationRequest.query.filter_by(status='Pending').order_by(UserCreationRequest.created_at.desc()).all()
     user_request_history = []
     if user_id:
@@ -1743,7 +1767,7 @@ def get_home_context():
     m_approval = request.args.get('m_approval')
     
     user_list = []
-    if session.get('user_role') == 'admin' or user_id == 1:
+    if is_admin_view:
         u_query = UserLogin.query
         if m_mobile: u_query = u_query.filter(UserLogin.mobile.ilike(f"%{m_mobile}%"))
         if m_name: u_query = u_query.filter(UserLogin.name.ilike(f"%{m_name}%"))
@@ -2011,6 +2035,8 @@ def get_home_context():
 
     context = {
         'metrics': metrics,
+        'current_user': current_user,
+        'is_admin_view': is_admin_view,
         'profile': profile,
         'profile_member_id': profile_member_id,
         'news_list': news_list,
@@ -2320,7 +2346,7 @@ def support_status_update():
 # ----- News Management -----
 @main.route('/admin/news/create', methods=['POST'])
 def news_create():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
     
     title = request.form.get('title')
@@ -2359,7 +2385,7 @@ def news_create():
 
 @main.route('/admin/news/update', methods=['POST'])
 def news_update():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     news_id = request.form.get('news_id')
@@ -2388,7 +2414,7 @@ def news_update():
 
 @main.route('/admin/news/delete/<int:id>')
 def news_delete(id):
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     from .models import News
@@ -2403,7 +2429,7 @@ def news_delete(id):
 
 @main.route('/admin/legal-document/create', methods=['POST'])
 def legal_document_create():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
 
     title = (request.form.get('title') or '').strip()
@@ -2452,7 +2478,7 @@ def legal_document_create():
 # ----- Carousel Management -----
 @main.route('/admin/carousel/add', methods=['POST'])
 def carousel_add():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     title = request.form.get('title')
@@ -2482,7 +2508,7 @@ def carousel_add():
 
 @main.route('/admin/carousel/update', methods=['POST'])
 def carousel_update():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     slide_id = request.form.get('slide_id')
@@ -2510,7 +2536,7 @@ def carousel_update():
     return redirect_home_with_target("#carouselMgmtSection")
 @main.route('/admin/carousel/delete/<int:id>')
 def carousel_delete(id):
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     from .models import CarouselImage
@@ -2548,7 +2574,7 @@ def schema_sync():
 # ----- User Management -----
 @main.route('/admin/user/check-mobile', methods=['POST'])
 def user_check_mobile():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return {'error': 'unauthorized'}, 403
 
     data = request.get_json(silent=True) or {}
@@ -2741,7 +2767,7 @@ def reject_user_request(req_id):
 
 @main.route('/admin/user/update', methods=['POST'])
 def user_update():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
     user_id = request.form.get('user_id')
     name = request.form.get('name')
@@ -2791,7 +2817,7 @@ def user_update():
 
 @main.route('/admin/user/delete/<int:id>')
 def user_delete(id):
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
     
     user = UserLogin.query.get_or_404(id)
@@ -2857,7 +2883,7 @@ def user_delete(id):
 
 @main.route('/admin/user/disable/<int:id>', methods=['POST'])
 def user_disable(id):
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
 
     user = UserLogin.query.get_or_404(id)
@@ -2873,7 +2899,7 @@ def user_disable(id):
 
 @main.route('/admin/pin/assign', methods=['POST'])
 def admin_pin_assign():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
 
     mobile = normalize_mobile(request.form.get('recipient_mobile'))
@@ -3101,7 +3127,7 @@ def pin_transfer_disable(transfer_id):
 
 @main.route('/admin/level-plan/update', methods=['POST'])
 def level_plan_update():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
 
     level_plan_id_raw = (request.form.get('level_plan_id') or '').strip()
@@ -3147,7 +3173,7 @@ def level_plan_update():
 # ----- About Us & Events Management -----
 @main.route('/admin/event/create', methods=['POST'])
 def event_create():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     title = request.form.get('title')
@@ -3180,7 +3206,7 @@ def event_create():
 
 @main.route('/admin/event/update', methods=['POST'])
 def event_update():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     event_id = request.form.get('event_id')
@@ -3216,7 +3242,7 @@ def event_update():
 
 @main.route('/admin/event/delete/<int:id>')
 def event_delete(id):
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     from .models import Event, EventImage
@@ -3251,11 +3277,39 @@ def user_profile_update():
     profile.address = request.form.get('address')
     if not profile.mobile:
         profile.mobile = current_user.mobile if current_user else None
-    
+
+    # Optional profile photo upload (stored on user_login.image_path)
+    try:
+        file = request.files.get('profile_photo')
+        if file and file.filename and current_user:
+            import os
+            from datetime import datetime
+            from werkzeug.utils import secure_filename
+
+            filename_raw = secure_filename(file.filename)
+            _, ext = os.path.splitext(filename_raw)
+            ext = (ext or '').lower()
+            allowed_ext = {'.jpg', '.jpeg', '.png', '.webp'}
+            if ext not in allowed_ext:
+                session['validation_popup'] = "Profile photo must be JPG, PNG, or WebP."
+                return redirect_home_with_target("#profileSection")
+
+            upload_dir = os.path.join('Psparshcare', 'static', 'uploads', 'profile_photos')
+            os.makedirs(upload_dir, exist_ok=True)
+            stamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+            filename = f"user_{user_id}_{stamp}{ext}"
+            abs_path = os.path.join(upload_dir, filename)
+            file.save(abs_path)
+            current_user.image_path = f"uploads/profile_photos/{filename}"
+            db.session.add(current_user)
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Profile photo upload failed.")
+     
     db.session.commit()
     session['user_name'] = profile.name # Update session cache
     session['user_action_msg'] = "Profile updated successfully."
-    
+     
     return redirect_home_with_target("#profileSection")
 
 @main.route('/bank/update', methods=['POST'])
@@ -3284,7 +3338,7 @@ def bank_update():
 @main.route('/admin/company/update', methods=['POST'])
 def profile_update():
     """Handles company profile updates (About, Vision, etc.) by Admin."""
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     from .models import CompanyProfile
@@ -3307,7 +3361,7 @@ def profile_update():
 
 @main.route('/admin/quick-link/add', methods=['POST'])
 def quick_link_add():
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     title = request.form.get('title')
@@ -3323,7 +3377,7 @@ def quick_link_add():
 
 @main.route('/admin/quick-link/delete/<int:id>')
 def quick_link_delete(id):
-    if session.get('user_role') != 'admin' and session.get('user_id') != 1:
+    if not is_admin_user(get_session_user()):
         return redirect_home_with_target()
         
     from .models import QuickLink

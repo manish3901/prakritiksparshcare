@@ -12,6 +12,7 @@ class UserLogin(db.Model):
     status = db.Column(db.String(20), default='Active', index=True) # Active, Inactive
     name = db.Column(db.String(100), index=True)
     role = db.Column(db.String(20), default='user') # admin, user
+    image_path = db.Column(db.String(255))  # relative path under /static, e.g. uploads/profile_photos/...
     
     # New Fields
     city = db.Column(db.String(100))

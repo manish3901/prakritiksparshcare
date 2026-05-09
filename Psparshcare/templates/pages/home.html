@@ -132,6 +132,32 @@
     flex-shrink: 0;
   }
 
+  .portal-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 1rem;
+    display: block;
+  }
+
+  .portal-user-avatar .portal-user-avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .psc-user-photo-letter {
+    width: 96px;
+    height: 96px;
+    border-radius: 18px;
+    object-fit: cover;
+    border: 2px solid rgba(30, 41, 59, 0.12);
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
+    background: #fff;
+  }
+
   .portal-user-eyebrow {
     display: none;
   }
@@ -197,10 +223,11 @@
 {% endblock %}
 
 {% block content %}
-{% set sidebar_user_type = 'Administrator' if session.get('user_role') == 'admin' or session.get('user_id') == 1 else (profile.display_role|default(profile.type_of_user|default('Member'))) %}
-{% set sidebar_user_id = 'Admin' if session.get('user_role') == 'admin' or session.get('user_id') == 1 else profile_member_id %}
+{% set sidebar_user_type = 'Administrator' if is_admin_view else (profile.display_role|default(profile.type_of_user|default('Member'))) %}
+{% set sidebar_user_id = 'Admin' if is_admin_view else profile_member_id %}
 {% set sidebar_balance = 'INR ' ~ ('%.2f'|format(metrics.wallet_balance|default(0)|float)) %}
-{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+{% set sidebar_avatar_path = current_user.image_path if current_user and current_user.image_path else None %}
+{% if is_admin_view %}
   {% set sidebar_level = 'Admin access' %}
 {% elif user_level_product_keys|length == 2 %}
   {% set sidebar_level = 'Pad L' ~ (level_views.get('pad', {}).get('current_level', 0)) ~ ' | Diaper L' ~ (level_views.get('diaper', {}).get('current_level', 0)) %}
@@ -219,7 +246,11 @@
       <div class="portal-user-card">
         <div class="portal-user-top">
           <div class="portal-user-avatar">
-            <i class="bi bi-person-vcard"></i>
+            {% if sidebar_avatar_path %}
+              <img src="{{ url_for('static', filename=sidebar_avatar_path) }}" alt="Profile photo">
+            {% else %}
+              <span class="portal-user-avatar-fallback"><i class="bi bi-person-vcard"></i></span>
+            {% endif %}
           </div>
           <div class="text-start min-w-0">
             <span class="portal-user-name">{{ session.get('user_name', profile.name)|default('User') }}</span>
@@ -254,7 +285,7 @@
         ['Manage Levels', 'bi-layers-fill', '#levelMgmtSection']
       ] %}
 
-      {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+      {% if is_admin_view %}
       {% set nav_items = nav_items + [
       ['Manage Users', 'bi-people-fill', '#userMgmtSection'],
       ['External Coupen System', 'bi-ticket-perforated', '#couponMgmtSection'],
@@ -313,8 +344,12 @@
       <div class="portal-brand-wrap mt-2">
         <div class="portal-user-card">
           <div class="portal-user-top">
-            <div class="portal-user-avatar">
-              <i class="bi bi-person-vcard"></i>
+           <div class="portal-user-avatar">
+              {% if sidebar_avatar_path %}
+                <img src="{{ url_for('static', filename=sidebar_avatar_path) }}" alt="Profile photo">
+              {% else %}
+                <span class="portal-user-avatar-fallback"><i class="bi bi-person-vcard"></i></span>
+              {% endif %}
             </div>
             <div class="text-start min-w-0">
               <span class="portal-user-name">{{ session.get('user_name', profile.name)|default('User') }}</span>
@@ -348,7 +383,7 @@
         ['Manage Levels', 'bi-layers-fill', '#levelMgmtSection']
         ] %}
 
-        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+        {% if is_admin_view %}
         {% set nav_items = nav_items + [
         ['Manage Users', 'bi-people-fill', '#userMgmtSection'],
         ['External Coupen System', 'bi-ticket-perforated', '#couponMgmtSection'],
@@ -532,7 +567,7 @@
             <div class="col-xl-8">
               <div class="glass-card p-4 border-0 shadow-sm mb-4">
                 <h5 class="fw-bold mb-4">Professional Profile Settings</h5>
-                <form action="{{ url_for('main.user_profile_update') }}" method="POST">
+                <form action="{{ url_for('main.user_profile_update') }}" method="POST" enctype="multipart/form-data">
                   <input type="hidden" name="target" value="#profileSection">
                   <div class="row g-3">
                     <div class="col-md-6">
@@ -552,6 +587,11 @@
                     <div class="col-md-6">
                       <label class="small fw-semibold text-muted mb-1">Member ID</label>
                       <input class="form-control rounded-pill bg-light" value="{{ profile_member_id }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="small fw-semibold text-muted mb-1">Profile Photo</label>
+                      <input type="file" name="profile_photo" class="form-control rounded-pill" accept="image/png,image/jpeg,image/webp">
+                      <small class="text-muted ps-2">JPG / PNG / WebP. Recommended: square photo.</small>
                     </div>
                     <div class="col-md-6">
                       <label class="small fw-semibold text-muted mb-1">City/State</label>
@@ -588,8 +628,12 @@
                     </div>
                   </div>
 
-                  <p class="lh-lg">To,<br><strong>{{ profile.name }}</strong><br>Member ID: {{ profile_member_id }}
-                  </p>
+                  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <p class="lh-lg mb-0">To,<br><strong>{{ profile.name }}</strong><br>Member ID: {{ profile_member_id }}</p>
+                    {% if current_user and current_user.image_path %}
+                      <img src="{{ url_for('static', filename=current_user.image_path) }}" alt="Profile photo" class="psc-user-photo-letter">
+                    {% endif %}
+                  </div>
 
                   <p class="mt-4 lh-lg">Dear Partner,</p>
                   <p class="lh-lg">Welcome to the PrakritikSparshCare family! It is with great pleasure that we officially
@@ -618,8 +662,13 @@
             <div class="col-xl-4">
               <div class="glass-card p-4 border-0 shadow-sm h-100 text-center animate-up">
                 <div class="position-relative d-inline-block mb-4">
-                  <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Profile Logo"
-                    class="psc-site-logo psc-site-logo-profile">
+                  {% if current_user and current_user.image_path %}
+                    <img src="{{ url_for('static', filename=current_user.image_path) }}" alt="Profile photo"
+                      class="psc-user-photo-letter" style="width: 140px; height: 140px;">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Profile Logo"
+                      class="psc-site-logo psc-site-logo-profile">
+                  {% endif %}
                   <div class="position-absolute bottom-0 end-0 bg-success border border-white border-3 rounded-circle"
                     style="width: 30px; height: 30px;"></div>
                 </div>
@@ -695,15 +744,18 @@
                 <p class="text-muted small mb-0 font-monospace">Manage and track your activation pins.</p>
               </div>
               <div class="d-flex gap-2 flex-wrap justify-content-end">
-                {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                {% if is_admin_view %}
                 <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#adminPinAssignModal">
                   <i class="bi bi-arrow-left-right me-1"></i>Pin Transfer
                 </button>
                 <a href="{{ url_for('main.home', target='hierarchySection') }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
                   <i class="bi bi-hourglass-split me-1"></i>Pending Approvals
-                  {% if pending_requests %}
-                  <span class="badge bg-warning text-dark ms-1">{{ pending_requests|length }}</span>
-                  {% endif %}
+                  {% set _pending_count = pending_requests|length if pending_requests else 0 %}
+                  <span
+                    class="badge bg-warning text-dark ms-1 js-pending-approvals-badge"
+                    data-initial="{{ _pending_count }}"
+                    {% if _pending_count == 0 %}style="display:none"{% endif %}
+                  >{{ _pending_count }}</span>
                 </a>
                 {% endif %}
                 <div
@@ -771,12 +823,12 @@
                       <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
                         {% set can_transfer_pin = (pin.status if pin.status is defined else pin.display_status) == 'Unused' %}
                         {% if can_transfer_pin %}
-                        <button class="btn btn-sm {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}btn-primary{% else %}btn-light border shadow-sm{% endif %} rounded-pill px-3" type="button"
+                        <button class="btn btn-sm {% if is_admin_view %}btn-primary{% else %}btn-light border shadow-sm{% endif %} rounded-pill px-3" type="button"
                           data-bs-toggle="modal" data-bs-target="#transferPinModal"
                           data-pin-id="{{ pin.id if pin.id is defined else '' }}"
                           data-pin-code="{{ pin.code if pin.code is defined else pin.epin }}"
                           data-pin-type="{{ pin.pin_type.name if pin.pin_type is defined and pin.pin_type else 'Pin' }}">
-                          <i class="bi bi-arrow-left-right me-1"></i>{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}Assign / Transfer{% else %}Transfer{% endif %}
+                          <i class="bi bi-arrow-left-right me-1"></i>{% if is_admin_view %}Assign / Transfer{% else %}Transfer{% endif %}
                         </button>
                         <button class="btn btn-sm btn-premium rounded-pill px-3 {% if not can_request_subuser %}subuser-blocked-trigger{% endif %}" type="button" {% if can_request_subuser %}data-bs-toggle="modal" data-bs-target="#requestSubUserModal" data-request-target="#epinSection" data-pin-id="{{ pin.id if pin.id is defined else '' }}" data-pin-type="{{ pin.pin_type.name if pin.pin_type is defined and pin.pin_type else 'Pin' }}" data-pin-code="{{ pin.code if pin.code is defined else pin.epin }}"{% else %}data-block-reason="{{ subuser_request_block_reason or 'Your account cannot submit sub-user requests yet.' }}"{% endif %}>
                           Register
@@ -796,7 +848,7 @@
               </table>
             </div>
           </div>
-          {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+          {% if is_admin_view %}
           <div class="glass-card p-4 border-0 shadow-sm mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
@@ -846,8 +898,8 @@
           </div>
           {% endif %}
           <div class="row g-4 mt-3">
-            <div class="{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}d-none{% else %}col-lg-6{% endif %}">
-              {% if session.get('user_role') != 'admin' and session.get('user_id') != 1 %}
+            <div class="{% if is_admin_view %}d-none{% else %}col-lg-6{% endif %}">
+              {% if not is_admin_view %}
               <div class="glass-card p-4 border-0 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <div>
@@ -889,12 +941,12 @@
               </div>
               {% endif %}
             </div>
-            <div class="{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}col-12{% else %}col-lg-6{% endif %}">
+            <div class="{% if is_admin_view %}col-12{% else %}col-lg-6{% endif %}">
               <div class="glass-card p-4 border-0 shadow-sm mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <div>
                     <h6 class="fw-semibold mb-0">Transfer History</h6>
-                    <p class="text-muted small mb-0">{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}System-wide pin assignment records for all users.{% else %}Latest assignment records with recipient and pin type.{% endif %}</p>
+                    <p class="text-muted small mb-0">{% if is_admin_view %}System-wide pin assignment records for all users.{% else %}Latest assignment records with recipient and pin type.{% endif %}</p>
                   </div>
                 </div>
                 <div class="table-responsive">
@@ -902,12 +954,12 @@
                     <thead class="small text-uppercase text-muted ls-1">
                       <tr>
                         <th>Pin Type</th>
-                        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                        {% if is_admin_view %}
                         <th>From</th>
                         {% endif %}
-                        <th>{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}Recipient{% else %}User{% endif %}</th>
-                        <th>{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}Mobile{% else %}Direction / Status{% endif %}</th>
-                        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                        <th>{% if is_admin_view %}Recipient{% else %}User{% endif %}</th>
+                        <th>{% if is_admin_view %}Mobile{% else %}Direction / Status{% endif %}</th>
+                        {% if is_admin_view %}
                         <th>Status</th>
                         <th class="text-end">Action</th>
                         {% else %}
@@ -923,24 +975,24 @@
                           <br>
                           <span class="small text-muted">{{ transfer.pin_code }}</span>
                         </td>
-                        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                        {% if is_admin_view %}
                         <td class="small">
                           {{ transfer.sender }}<br><span class="text-muted">{{ transfer.sender_mobile }}</span>
                         </td>
                         {% endif %}
                         <td>
-                          <div class="fw-semibold small">{{ transfer.recipient if session.get('user_role') == 'admin' or session.get('user_id') == 1 else transfer.counterpart_name }}</div>
-                          <div class="text-muted small">{{ transfer.type if session.get('user_role') == 'admin' or session.get('user_id') == 1 else transfer.counterpart_mobile }}</div>
+                          <div class="fw-semibold small">{{ transfer.recipient if is_admin_view else transfer.counterpart_name }}</div>
+                          <div class="text-muted small">{{ transfer.type if is_admin_view else transfer.counterpart_mobile }}</div>
                         </td>
                         <td class="small">
-                          {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                          {% if is_admin_view %}
                           {{ transfer.recipient_mobile }}
                           {% else %}
                           <div class="fw-semibold">{{ transfer.direction }}</div>
                           <div class="text-muted">{{ transfer.pin_status }}</div>
                           {% endif %}
                         </td>
-                        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                        {% if is_admin_view %}
                         <td class="small">
                           <span class="badge {% if transfer.status == 'Active' %}bg-success-subtle text-success border border-success border-opacity-25{% else %}bg-secondary-subtle text-secondary border border-secondary border-opacity-25{% endif %} rounded-pill px-3">
                             {{ transfer.status }}
@@ -967,7 +1019,7 @@
                       </tr>
                       {% else %}
                       <tr>
-                        <td colspan="{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}7{% else %}4{% endif %}" class="text-center text-muted small py-3">No transfers yet.</td>
+                        <td colspan="{% if is_admin_view %}7{% else %}4{% endif %}" class="text-center text-muted small py-3">No transfers yet.</td>
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -978,7 +1030,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <div>
                     <h6 class="fw-semibold mb-0">Recent Usage Logs</h6>
-                    <p class="text-muted small mb-0">{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}Latest usage logs across all users and all products.{% else %}Recorded sales after each pin delivery.{% endif %}</p>
+                    <p class="text-muted small mb-0">{% if is_admin_view %}Latest usage logs across all users and all products.{% else %}Recorded sales after each pin delivery.{% endif %}</p>
                   </div>
                 </div>
                 <div class="table-responsive">
@@ -988,7 +1040,7 @@
                         <th>Pin Type</th>
                         <th>Buyer</th>
                         <th>Location</th>
-                        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                        {% if is_admin_view %}
                         <th>Created By</th>
                         {% endif %}
                         <th class="text-end">Date</th>
@@ -1004,7 +1056,7 @@
                         </td>
                         <td class="small">{{ usage.buyer_name }}<br><span class="text-muted">{{ usage.buyer_mobile }}</span></td>
                         <td class="small">{{ usage.city or '-' }}</td>
-                        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                        {% if is_admin_view %}
                         <td class="small">{{ usage.created_by }}</td>
                         {% endif %}
                         <td class="text-end small text-muted">
@@ -1017,7 +1069,7 @@
                       </tr>
                       {% else %}
                       <tr>
-                        <td colspan="{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}5{% else %}4{% endif %}" class="text-center small text-muted py-3">No usage recorded yet.</td>
+                        <td colspan="{% if is_admin_view %}5{% else %}4{% endif %}" class="text-center small text-muted py-3">No usage recorded yet.</td>
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -1039,7 +1091,7 @@
                 <thead class="small text-uppercase text-muted ls-1">
                   <tr>
                     <th>Pin Type</th>
-                    <th>{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}Transferred Pins{% else %}Unused Pins{% endif %}</th>
+                    <th>{% if is_admin_view %}Transferred Pins{% else %}Unused Pins{% endif %}</th>
                     <th>Used Pins</th>
                     <th class="text-end">Details</th>
                   </tr>
@@ -1076,12 +1128,15 @@
                 <p class="text-muted small mb-0">Manage your direct members, view your hierarchy tree, and track level-based earnings in one place.</p>
               </div>
                 <div class="d-flex gap-2 flex-wrap">
-                  {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                  {% if is_admin_view %}
                 <a href="{{ url_for('main.home', target='hierarchySection') }}" class="btn btn-outline-warning psc-action-pill">
                   <i class="bi bi-hourglass-split me-1"></i>Pending Approvals
-                  {% if pending_requests %}
-                  <span class="badge bg-warning text-dark ms-1">{{ pending_requests|length }}</span>
-                  {% endif %}
+                  {% set _pending_count = pending_requests|length if pending_requests else 0 %}
+                  <span
+                    class="badge bg-warning text-dark ms-1 js-pending-approvals-badge"
+                    data-initial="{{ _pending_count }}"
+                    {% if _pending_count == 0 %}style="display:none"{% endif %}
+                  >{{ _pending_count }}</span>
                 </a>
                 {% endif %}
                 <button class="btn btn-premium psc-action-pill {% if not can_request_subuser %}subuser-blocked-trigger{% endif %}" type="button" {% if can_request_subuser %}data-bs-toggle="modal" data-bs-target="#requestSubUserModal" data-request-target="#hierarchySection"{% else %}data-block-reason="{{ subuser_request_block_reason or 'Your account cannot submit sub-user requests yet.' }}"{% endif %}>
@@ -1127,7 +1182,7 @@
                       <th>Joining Date</th>
                       <th>User Type</th>
                       <th>Status</th>
-                      {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                      {% if is_admin_view %}
                       <th class="text-end">Action</th>
                       {% endif %}
                     </tr>
@@ -1155,7 +1210,7 @@
                           class="badge bg-{{ 'success' if member.status == 'Active' else 'danger' }}-subtle text-{{ 'success' if member.status == 'Active' else 'danger' }} border border-{{ 'success' if member.status == 'Active' else 'danger' }} border-opacity-10 rounded-pill px-3">{{ member.status }}
                           {% if member.approval_status and member.approval_status != 'Approved' %} / {{ member.approval_status }}{% endif %}</span>
                       </td>
-                      {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                      {% if is_admin_view %}
                       <td class="text-end">
                         <button class="btn btn-sm btn-white border rounded-circle" data-bs-toggle="modal" data-bs-target="#editUserModal{{ member.id }}">
                           <i class="bi bi-pencil-square text-primary"></i>
@@ -1165,7 +1220,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}5{% else %}4{% endif %}" class="text-center text-muted py-4">No direct members added under your hierarchy yet.</td>
+                      <td colspan="{% if is_admin_view %}5{% else %}4{% endif %}" class="text-center text-muted py-4">No direct members added under your hierarchy yet.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -1291,7 +1346,7 @@
             </div>
 
             <div class="row g-3 mb-4">
-              {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+              {% if is_admin_view %}
               <div class="col-md-3">
                 <div class="bg-light rounded-4 border p-3 h-100">
                   <div class="small text-muted text-uppercase fw-semibold">Total Balance</div>
@@ -1376,7 +1431,7 @@
                 <table class="table table-hover align-middle">
                   <thead>
                     <tr class="text-muted small text-uppercase ls-1">
-                      {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                      {% if is_admin_view %}
                       <th>User</th>
                       {% endif %}
                       <th>Date</th>
@@ -1392,7 +1447,7 @@
                     {% if withdraw_history_rows %}
                     {% for req in withdraw_history_rows %}
                     <tr>
-                      {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                      {% if is_admin_view %}
                       <td>
                         <div class="fw-semibold">{{ req.user.name or 'User' }}</div>
                         <div class="small text-muted">MID: {{ req.user.emp_id or req.user.id }}</div>
@@ -1414,7 +1469,7 @@
                     {% endfor %}
                     {% else %}
                     <tr>
-                      <td colspan="{% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}8{% else %}7{% endif %}" class="text-center text-muted py-4">No withdraw requests submitted yet.</td>
+                      <td colspan="{% if is_admin_view %}8{% else %}7{% endif %}" class="text-center text-muted py-4">No withdraw requests submitted yet.</td>
                     </tr>
                     {% endif %}
                   </tbody>
@@ -1422,7 +1477,7 @@
               </div>
             </div>
 
-            {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+            {% if is_admin_view %}
             <div class="mt-5">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
@@ -1536,7 +1591,7 @@
                     <div class="p-5 text-center text-white bg-dark bg-opacity-75">
                       <span class="badge bg-white text-primary rounded-pill px-4 py-1 mb-3 fw-bold">OUR JOURNEY</span>
                       <p class="lead mb-4">{{ company_profile.about_us }}</p>
-                      {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                      {% if is_admin_view %}
                       <button class="btn btn-white btn-sm rounded-pill px-4 fw-bold text-primary shadow"
                         data-bs-toggle="modal" data-bs-target="#editAboutModal">
                         REWRITE STORY
@@ -1575,7 +1630,7 @@
                         <p class="text-secondary small mb-0">{{ company_profile.mission }}</p>
                       </div>
                     </div>
-                    {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                    {% if is_admin_view %}
                     <div class="col-12 text-center">
                       <button class="btn btn-premium btn-sm rounded-pill px-4 shadow" data-bs-toggle="modal"
                         data-bs-target="#editVisionMissionModal">
@@ -1600,7 +1655,7 @@
                 <div class="accordion-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0">Latest Announcements</h6>
-                    {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                    {% if is_admin_view %}
                     <button class="btn btn-premium btn-sm rounded-pill px-3 shadow" data-bs-toggle="modal"
                       data-bs-target="#addNewsModal">Post Update</button>
                     {% endif %}
@@ -1642,7 +1697,7 @@
                       <h6 class="fw-bold mb-0">Policies, Certificates & Legal Files</h6>
                       <p class="text-muted small mb-0">View uploaded legal documents in a protected preview modal.</p>
                     </div>
-                    {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                    {% if is_admin_view %}
                     <button class="btn btn-premium btn-sm rounded-pill px-3 shadow" data-bs-toggle="modal"
                       data-bs-target="#addLegalDocumentModal">Add Document</button>
                     {% endif %}
@@ -1755,7 +1810,7 @@
                           </a>
                           {% endfor %}
                         </div>
-                        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                    {% if is_admin_view %}
                         <div class="d-grid gap-2">
                           <button class="btn btn-white btn-sm rounded-pill fw-bold shadow" data-bs-toggle="modal"
                             data-bs-target="#editContactModal">Edit Contacts</button>
@@ -1773,10 +1828,10 @@
           </div>
         </section>
 
-        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+                    {% if is_admin_view %}
         <!-- Admin Sections -->
         <section id="userMgmtSection" class="content-section d-none animate-fade-in">
-          {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+          {% if is_admin_view %}
           <div class="glass-card p-4 border-0 shadow-sm mb-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h5 class="fw-bold mb-0"><i class="bi bi-people-fill me-2 text-primary"></i>User & Team Management</h5>
@@ -2166,7 +2221,7 @@
         {% endfor %}
 
         <section id="levelMgmtSection" class="content-section d-none animate-fade-in">
-          {% set is_admin_view = session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+          {# is_admin_view comes from the backend context (DB-backed admin detection). #}
           <div class="glass-card p-4 border-0 shadow-sm mb-4">
             <div class="d-flex justify-content-between align-items-start mb-4">
               <div>
@@ -2688,7 +2743,7 @@
                 <button type="submit" class="btn btn-dark w-100 rounded-pill shadow-sm">Filter</button>
               </div>
 
-              {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+              {% if is_admin_view %}
               <div class="col-md-6 mt-3">
                 <select name="user_filter" class="form-select select2-user rounded-pill shadow-sm" style="width: 100%;">
                   <option value="All">All Users (Admin View)</option>
@@ -2723,8 +2778,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% set current_tickets = all_tickets if (session.get('user_role') == 'admin' or session.get('user_id')
-                  == 1) else support %}
+                  {% set current_tickets = all_tickets if is_admin_view else support %}
                   {% for t in current_tickets %}
                   <tr>
                     <td>
@@ -3015,7 +3069,7 @@
     </div>
   </div>
 
-  {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+  {% if is_admin_view %}
   <div class="modal fade" id="adminPinAssignModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content glass-card border-0 p-4">
@@ -3425,7 +3479,7 @@
           <p class="small mb-0" id="vt_desc">---</p>
         </div>
 
-        {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+        {% if is_admin_view %}
         <form action="{{ url_for('main.ticket_update') }}" method="POST">
           <input type="hidden" name="target" value="#supportSection">
           <input type="hidden" name="ticket_id" id="vt_id">
@@ -3563,7 +3617,7 @@
         <p class="text-secondary lh-lg">{{ n.description }}</p>
         <div class="d-flex justify-content-between mt-4">
           <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-          {% if session.get('user_role') == 'admin' or session.get('user_id') == 1 %}
+          {% if is_admin_view %}
           <a href="{{ url_for('main.news_delete', id=n.id) }}" class="btn btn-outline-danger rounded-pill px-4"
             onclick="return confirm('Delete this post?')">Delete</a>
           {% endif %}
@@ -3734,7 +3788,7 @@
         <div class="display-1 text-success mb-3"><i class="bi bi-check-circle-fill shadow-sm"></i></div>
         <h3 class="fw-bold">Process Successful!</h3>
         <p class="text-muted" id="confMsg">Your request has been handled.</p>
-        {% if (session.get('user_role') == 'admin' or session.get('user_id') == 1) and generated_password %}
+        {% if is_admin_view and generated_password %}
         <div class="mt-3">
           <div class="small text-muted mb-2">Temporary password{% if generated_password_user %} for
             {{ generated_password_user }}{% endif %}</div>
@@ -4311,6 +4365,67 @@
     const transferRecipientInput = document.getElementById('transferRecipientMobileInput');
     if (transferRecipientInput) {
       transferRecipientInput.addEventListener('change', bindTransferRecipientSummary);
+    }
+
+    // Admin approval queue is server-rendered; keep the pending approvals count fresh.
+    // Without polling, an admin who keeps the page open won't see new requests until refresh.
+    const isAdminView = {{ (is_admin_view or false) | tojson }};
+    if (isAdminView) {
+      const statusUrl = {{ url_for('main.admin_pending_requests_status') | tojson }};
+      const badges = Array.from(document.querySelectorAll('.js-pending-approvals-badge'));
+
+      let lastCount = (() => {
+        const fromBadge = badges.find(b => b?.dataset?.initial)?.dataset?.initial;
+        const parsed = Number(fromBadge);
+        return Number.isFinite(parsed) ? parsed : 0;
+      })();
+
+      const renderCount = (count) => {
+        badges.forEach((b) => {
+          if (!b) return;
+          b.textContent = String(count);
+          b.style.display = count > 0 ? '' : 'none';
+        });
+      };
+
+      const maybeReloadForNewRequests = () => {
+        // If no modal is open and admin is already on an approvals-heavy section,
+        // refresh to pull in the new rows and their approval modals.
+        if (document.querySelector('.modal.show')) return;
+        const targetParam = new URLSearchParams(window.location.search).get('target') || '';
+        const onApprovalScreens = (targetParam === 'hierarchySection' || targetParam === 'epinSection');
+        if (!onApprovalScreens) return;
+
+        const url = new URL(window.location.href);
+        if (!url.searchParams.get('target')) {
+          url.searchParams.set('target', targetParam || 'hierarchySection');
+        }
+        window.location.replace(url.toString());
+      };
+
+      const poll = async () => {
+        try {
+          const resp = await fetch(statusUrl, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+          if (!resp.ok) return;
+          const data = await resp.json();
+          const count = Number(data?.count ?? 0);
+          if (!Number.isFinite(count)) return;
+
+          if (count !== lastCount) {
+            renderCount(count);
+            if (count > lastCount) {
+              maybeReloadForNewRequests();
+            }
+            lastCount = count;
+          }
+        } catch (e) {
+          // Ignore transient poll errors.
+        }
+      };
+
+      renderCount(lastCount);
+      setTimeout(poll, 3500);
+      setInterval(poll, 15000);
     }
 
     const deleteUserModal = document.getElementById('deleteUserModal');

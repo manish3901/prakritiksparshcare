@@ -114,6 +114,26 @@ def ensure_user_login_columns(app: Flask):
             if updates:
                 app.logger.info("Added hierarchy columns to user_login.")
 
+
+def ensure_user_login_profile_photo_column(app: Flask):
+    """Add user_login.image_path for profile photo uploads when missing."""
+    with app.app_context():
+        engine = db.get_engine()
+        inspector = inspect(engine)
+        if 'user_login' not in inspector.get_table_names():
+            return
+
+        columns = {col_info['name'] for col_info in inspector.get_columns('user_login')}
+        if 'image_path' in columns:
+            return
+
+        try:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE user_login ADD COLUMN image_path VARCHAR(255);"))
+                app.logger.info("Added missing user_login.image_path column via auto-migration.")
+        except Exception:
+            app.logger.exception("Skipping ensure_user_login_profile_photo_column due to DB permissions or engine error.")
+
 def ensure_base_schema(app: Flask):
     """
     Ensure the core schema exists on a fresh database.
@@ -158,6 +178,7 @@ def ensure_schema_bootstrap(app: Flask):
             # Everything else is additive migration. If permissions prevent DDL, we log and continue.
             _best_effort("user_login_level", ensure_user_login_level_column)
             _best_effort("user_login_columns", ensure_user_login_columns)
+            _best_effort("user_login_profile_photo", ensure_user_login_profile_photo_column)
             _best_effort("level_plans", ensure_level_plans_table)
             _best_effort("user_creation_requests", ensure_user_creation_requests_table)
             _best_effort("user_creation_request_columns", ensure_user_creation_request_columns)
