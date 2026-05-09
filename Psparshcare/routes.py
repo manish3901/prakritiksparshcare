@@ -641,6 +641,48 @@ def get_reserved_request_pin_ids(user_id):
     return {row[0] for row in reserved if row and row[0]}
 
 
+def get_effective_reserved_pin_ids(user_id):
+    """
+    Pins that should be treated as "reserved" for a user.
+
+    This includes:
+    - pins explicitly reserved by pending UserCreationRequest rows (selected_epin_id)
+    - the earliest eligible unused pins that we implicitly hold back when there are pending
+      requests without a selected pin yet (requested_pin_count > 0 but selected_epin_id is NULL).
+
+    Keeping this logic centralized avoids a UX bug where a pin is shown as "Unused" but fails
+    validation when selected for registration.
+    """
+    if not user_id:
+        return set()
+
+    explicit_reserved = get_reserved_request_pin_ids(user_id)
+
+    pending_requests = UserCreationRequest.query.filter_by(
+        requested_by_id=user_id,
+        status='Pending'
+    ).order_by(UserCreationRequest.created_at.asc()).all()
+
+    unassigned_pending_count = sum(
+        max(req.requested_pin_count or 1, 1)
+        for req in pending_requests
+        if not req.selected_epin_id
+    )
+    if unassigned_pending_count <= 0:
+        return set(explicit_reserved)
+
+    eligible_pin_type_names = {'top up', 'trial pin'}
+    candidate_pins = EPin.query.filter_by(owner_id=user_id, status='Unused').order_by(EPin.created_at.asc()).all()
+    candidate_pins = [
+        pin for pin in candidate_pins
+        if (getattr(getattr(pin, 'pin_type', None), 'name', '') or '').strip().lower() in eligible_pin_type_names
+        and pin.id not in explicit_reserved
+    ]
+
+    held_ids = {pin.id for pin in candidate_pins[:unassigned_pending_count]}
+    return set(explicit_reserved) | held_ids
+
+
 def get_available_subuser_pins_for_user(user_id):
     if not user_id:
         return []
@@ -657,14 +699,8 @@ def get_available_subuser_pins_for_user(user_id):
     if not all_unused_pins:
         return []
 
-    pending_requests = UserCreationRequest.query.filter_by(requested_by_id=user_id, status='Pending').order_by(UserCreationRequest.created_at.asc()).all()
-    reserved_pin_ids = {req.selected_epin_id for req in pending_requests if req.selected_epin_id}
-    unassigned_pending_count = sum(max(req.requested_pin_count or 1, 1) for req in pending_requests if not req.selected_epin_id)
-
-    eligible_pins = [pin for pin in all_unused_pins if pin.id not in reserved_pin_ids]
-    if unassigned_pending_count > 0:
-        eligible_pins = eligible_pins[unassigned_pending_count:]
-    return eligible_pins
+    reserved_pin_ids = get_effective_reserved_pin_ids(user_id)
+    return [pin for pin in all_unused_pins if pin.id not in reserved_pin_ids]
 
 
 def build_pin_history_rows(pins, usage_reports):
@@ -1377,7 +1413,9 @@ def get_home_context():
     else:
         unused_pins = EPin.query.filter_by(owner_id=user_id, status='Unused').all()
         used_pins = EPin.query.filter_by(owner_id=user_id, status='Used').count() if user_id else 0
-    reserved_request_pin_ids = get_reserved_request_pin_ids(user_id)
+    # Reserve pins that are explicitly selected in pending requests, plus pins held back for
+    # pending requests that have not selected a specific pin yet.
+    reserved_request_pin_ids = get_effective_reserved_pin_ids(user_id)
     reserved_unused_pins = [pin for pin in unused_pins if pin.id in reserved_request_pin_ids]
     available_inventory_pins = [pin for pin in unused_pins if pin.id not in reserved_request_pin_ids]
     for pin in available_inventory_pins:
