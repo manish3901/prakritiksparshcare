@@ -3856,6 +3856,9 @@
     if (!id || id === '#') return;
     if (!id.startsWith('#')) id = '#' + id;
 
+    // Remember active section so form submissions can round-trip back here.
+    window.__pscActiveTarget = id;
+
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('d-none'));
     const target = document.querySelector(id);
     if (!target) return;
@@ -4249,6 +4252,20 @@
     const targetParam = urlParams.get('target');
     const initialTarget = (targetParam && targetParam !== 'None' ? targetParam : (window.location.hash || 'dashboardSection'));
     showSection(initialTarget);
+
+    // Ensure every form posts back the current visible section.
+    // Many routes call redirect_home_with_target() which uses request.form['target'].
+    document.querySelectorAll('form').forEach((form) => {
+      form.addEventListener('submit', () => {
+        const hasTarget = form.querySelector('input[name=\"target\"]');
+        if (hasTarget) return;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'target';
+        input.value = window.__pscActiveTarget || '#dashboardSection';
+        form.appendChild(input);
+      }, { capture: true });
+    });
 
     const collapseId = urlParams.get('collapse');
     if (collapseId) {

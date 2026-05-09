@@ -1318,6 +1318,26 @@ def get_home_context():
     if is_admin_view:
         user_level_product_keys = []
 
+    # If any route used Flask flash(), translate those messages into our existing modal UX
+    # so every form submission behaves consistently.
+    flashes = []
+    try:
+        flashes = list(session.get('_flashes') or [])
+    except Exception:
+        flashes = []
+    if flashes:
+        session.pop('_flashes', None)
+        if not session.get('validation_popup'):
+            for category, message in flashes:
+                if str(category).lower() in {'danger', 'warning', 'error'} and message:
+                    session['validation_popup'] = str(message)
+                    break
+        if not session.get('user_action_msg'):
+            for category, message in flashes:
+                if str(category).lower() in {'success', 'info'} and message:
+                    session['user_action_msg'] = str(message)
+                    break
+
     # Clamp product filter for non-admin users:
     # - If user has BOTH products -> allow 'all', 'pad', 'diaper'
     # - If user has ONE product -> allow only that product (no 'all')
@@ -1408,7 +1428,13 @@ def get_home_context():
 
     # 5. E-Pins
     if is_admin_user(current_user):
-        unused_pins = EPin.query.filter_by(status='Unused').order_by(EPin.created_at.desc()).all()
+        # For admins, treat the "Inventory" table as assignable pins, i.e. pins that are
+        # not yet assigned to any user. Otherwise, after assigning, they would still show
+        # up as "Unused" which is confusing.
+        unused_pins = EPin.query.filter(
+            EPin.status == 'Unused',
+            (EPin.owner_id.is_(None)) | (EPin.owner_id == user_id)
+        ).order_by(EPin.created_at.desc()).all()
         used_pins = EPin.query.filter_by(status='Used').count()
     else:
         unused_pins = EPin.query.filter_by(owner_id=user_id, status='Unused').all()
@@ -2946,22 +2972,22 @@ def admin_pin_assign():
     product_type_name = request.form.get('product_type')
 
     if quantity <= 0:
-        flash("Please specify a positive quantity.", "warning")
+        session['validation_popup'] = "Please specify a positive quantity."
         return redirect_home_with_target("#epinSection")
 
     if quantity > 25:
         quantity = 25
 
     if len(mobile) != 10:
-        flash("Enter a valid 10-digit recipient number.", "danger")
+        session['validation_popup'] = "Enter a valid 10-digit recipient number."
         return redirect_home_with_target("#epinSection")
 
     recipient = find_user_by_mobile(mobile)
     if not recipient:
-        flash("Recipient not found.", "danger")
+        session['validation_popup'] = "Recipient not found."
         return redirect_home_with_target("#epinSection")
     if recipient.id == session.get('user_id'):
-        flash("Please choose another user to assign pins.", "warning")
+        session['validation_popup'] = "Please choose another user to assign pins."
         return redirect_home_with_target("#epinSection")
 
     from .models import PinType, ProductType, EPin, EPinTransfer
@@ -2991,7 +3017,7 @@ def admin_pin_assign():
         created_codes.append(code)
 
     db.session.commit()
-    flash(f"Assigned {len(created_codes)} pin(s) to {recipient.name or recipient.mobile}.", "success")
+    session['user_action_msg'] = f"Assigned {len(created_codes)} pin(s) to {recipient.name or recipient.mobile}."
     return redirect_home_with_target("#epinSection")
 
 
@@ -3012,26 +3038,26 @@ def pin_transfer():
     selected_pin_id = request.form.get('pin_id')
 
     if len(mobile) != 10:
-        flash("Please enter a valid mobile number.", "danger")
+        session['validation_popup'] = "Please enter a valid mobile number."
         return redirect_home_with_target("#epinSection")
 
     recipient = find_user_by_mobile(mobile)
     if not recipient:
-        flash("Recipient not found.", "danger")
+        session['validation_popup'] = "Recipient not found."
         return redirect_home_with_target("#epinSection")
 
     if recipient.id == from_user_id:
-        flash("You cannot transfer pins to yourself.", "warning")
+        session['validation_popup'] = "You cannot transfer pins to yourself."
         return redirect_home_with_target("#epinSection")
 
     if effective_access_role(current_user) != 'admin':
         downline_ids = get_downline_user_ids(current_user)
         if recipient.id not in downline_ids:
-            flash("You can only transfer pins to users connected below you in your hierarchy.", "warning")
+            session['validation_popup'] = "You can only transfer pins to users connected below you in your hierarchy."
             return redirect_home_with_target("#epinSection")
 
     if quantity <= 0:
-        flash("Quantity must be at least one.", "warning")
+        session['validation_popup'] = "Quantity must be at least one."
         return redirect_home_with_target("#epinSection")
 
     from .models import EPin, EPinTransfer
@@ -3039,14 +3065,14 @@ def pin_transfer():
     if selected_pin_id:
         selected_pin = EPin.query.filter_by(id=selected_pin_id, owner_id=from_user_id, status='Unused').first()
         if not selected_pin:
-            flash("Selected pin is no longer available for transfer.", "warning")
+            session['validation_popup'] = "Selected pin is no longer available for transfer."
             return redirect_home_with_target("#epinSection")
         available_pins = [selected_pin]
         quantity = 1
     else:
         available_pins = EPin.query.filter_by(owner_id=from_user_id, status='Unused').order_by(EPin.created_at).limit(quantity).all()
     if len(available_pins) < quantity:
-        flash("You do not have enough unused pins to transfer.", "danger")
+        session['validation_popup'] = "You do not have enough unused pins to transfer."
         return redirect_home_with_target("#epinSection")
 
     for pin in available_pins:
@@ -3060,7 +3086,7 @@ def pin_transfer():
         db.session.add(transfer)
 
     db.session.commit()
-    flash(f"Transferred {quantity} pin(s) to {recipient.name or recipient.mobile}.", "success")
+    session['user_action_msg'] = f"Transferred {quantity} pin(s) to {recipient.name or recipient.mobile}."
     return redirect_home_with_target("#epinSection")
 
 
