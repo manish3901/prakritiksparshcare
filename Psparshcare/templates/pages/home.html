@@ -1317,7 +1317,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                       <div>
                         <div class="fw-bold">{{ node.name }}</div>
-                        <div class="small text-muted">{{ node.role|default('User') }} â€¢ {{ node.mobile }}</div>
+                        <div class="small text-muted">{{ node.role|default('User') }} &bull; {{ node.mobile }}</div>
                       </div>
                       <div class="text-end">
                         <div class="small text-muted">Level {{ node.level }}</div>
@@ -2201,7 +2201,7 @@
               <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
                   <h5 class="fw-bold mb-1">Sub-user Approval</h5>
-                  <p class="text-muted small mb-0">{{ req.applicant_name or 'N/A' }} â€¢ {{ req.applicant_mobile }}</p>
+                  <p class="text-muted small mb-0">{{ req.applicant_name or 'N/A' }} &bull; {{ req.applicant_mobile }}</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
@@ -3701,7 +3701,7 @@
         <div class="d-flex justify-content-between align-items-start mb-4">
           <div>
             <h5 class="fw-bold mb-1">Withdrawal Approval</h5>
-            <p class="text-muted small mb-0">{{ req.user.name or 'User' }} • {{ req.user.mobile }}</p>
+            <p class="text-muted small mb-0">{{ req.user.name or 'User' }} &bull; {{ req.user.mobile }}</p>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -3833,7 +3833,7 @@
           <div class="small text-muted mb-2">Temporary password{% if generated_password_user %} for
             {{ generated_password_user }}{% endif %}</div>
           <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
-            <span id="tempPwdMasked" class="fw-bold">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</span>
+            <span id="tempPwdMasked" class="fw-bold">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>
             <span id="tempPwdPlain" class="fw-bold d-none">{{ generated_password }}</span>
             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" id="tempPwdToggle">Show
               password</button>
