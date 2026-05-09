@@ -748,7 +748,7 @@
                 <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#adminPinAssignModal">
                   <i class="bi bi-arrow-left-right me-1"></i>Pin Transfer
                 </button>
-                <a href="{{ url_for('main.home', target='hierarchySection') }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                <a href="{{ url_for('main.home', target='epinSection', scroll='pendingApprovalsCard') }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
                   <i class="bi bi-hourglass-split me-1"></i>Pending Approvals
                   {% set _pending_count = pending_requests|length if pending_requests else 0 %}
                   <span
@@ -793,6 +793,7 @@
               <table class="table table-hover align-middle">
                 <thead>
                   <tr class="text-muted small text-uppercase ls-1">
+                    <th>Sr No</th>
                     <th>Pin Details</th>
                     <th>Status</th>
                     <th>Assignment Date</th>
@@ -802,6 +803,7 @@
                 <tbody>
                   {% for pin in epin_results %}
                   <tr>
+                    <td class="small text-muted">{{ loop.index }}</td>
                     <td>
                       <div class="fw-bold font-monospace mb-1">{{ pin.code if pin.code is defined else pin.epin }}</div>
                       <span class="badge bg-light text-muted fw-normal border">{{ pin.pin_type.name if pin.pin_type is defined and pin.pin_type else 'Pin' }}</span>
@@ -841,7 +843,7 @@
                   </tr>
                   {% else %}
                   <tr>
-                    <td colspan="4" class="text-center text-muted py-4">No unused pins are available in your inventory right now.</td>
+                    <td colspan="5" class="text-center text-muted py-4">No unused pins are available in your inventory right now.</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -849,13 +851,13 @@
             </div>
           </div>
           {% if is_admin_view %}
-          <div class="glass-card p-4 border-0 shadow-sm mb-4">
+          <div class="glass-card p-4 border-0 shadow-sm mb-4" id="pendingApprovalsCard">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h6 class="fw-bold mb-1"><i class="bi bi-hourglass-split me-2 text-warning"></i>Pending Registration Approvals</h6>
                 <p class="text-muted small mb-0">Requests raised through hierarchy or E-Pin register actions will appear here for admin approval.</p>
               </div>
-              <a href="{{ url_for('main.home', target='hierarchySection') }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+              <a href="{{ url_for('main.home', target='epinSection', scroll='pendingApprovalsCard') }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
                 Open Full Queue
               </a>
             </div>
@@ -863,6 +865,7 @@
               <table class="table table-sm table-hover align-middle mb-0">
                 <thead class="small text-uppercase text-muted ls-1">
                   <tr>
+                    <th>Sr No</th>
                     <th>Applicant</th>
                     <th>Requested By</th>
                     <th>Pin Type</th>
@@ -872,6 +875,7 @@
                 <tbody>
                   {% for req in pending_requests %}
                   <tr>
+                    <td class="small text-muted">{{ loop.index }}</td>
                     <td>
                       <div class="fw-semibold">{{ req.applicant_name or 'N/A' }}</div>
                       <div class="text-muted small">{{ req.applicant_mobile }}</div>
@@ -889,7 +893,7 @@
                   </tr>
                   {% else %}
                   <tr>
-                    <td colspan="4" class="text-center text-muted py-4">No pending registration approvals right now.</td>
+                    <td colspan="5" class="text-center text-muted py-4">No pending registration approvals right now.</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -953,6 +957,7 @@
                   <table class="table table-sm table-hover mb-0">
                     <thead class="small text-uppercase text-muted ls-1">
                       <tr>
+                        <th>Sr No</th>
                         <th>Pin Type</th>
                         {% if is_admin_view %}
                         <th>From</th>
@@ -970,6 +975,7 @@
                     <tbody>
                       {% for transfer in pin_transfer_history %}
                       <tr>
+                        <td class="small text-muted">{{ loop.index }}</td>
                         <td class="font-monospace">
                           {{ transfer.pin_type }}
                           <br>
@@ -1019,7 +1025,7 @@
                       </tr>
                       {% else %}
                       <tr>
-                        <td colspan="{% if is_admin_view %}7{% else %}4{% endif %}" class="text-center text-muted small py-3">No transfers yet.</td>
+                        <td colspan="{% if is_admin_view %}8{% else %}5{% endif %}" class="text-center text-muted small py-3">No transfers yet.</td>
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -1037,6 +1043,7 @@
                   <table class="table table-sm table-hover mb-0">
                     <thead class="small text-uppercase text-muted ls-1">
                       <tr>
+                        <th>Sr No</th>
                         <th>Pin Type</th>
                         <th>Buyer</th>
                         <th>Location</th>
@@ -1049,6 +1056,7 @@
                     <tbody>
                       {% for usage in pin_usage %}
                       <tr>
+                        <td class="small text-muted">{{ loop.index }}</td>
                         <td class="font-monospace">
                           {{ usage.pin_type }}
                           <br>
@@ -1069,7 +1077,7 @@
                       </tr>
                       {% else %}
                       <tr>
-                        <td colspan="{% if is_admin_view %}5{% else %}4{% endif %}" class="text-center small text-muted py-3">No usage recorded yet.</td>
+                        <td colspan="{% if is_admin_view %}6{% else %}5{% endif %}" class="text-center small text-muted py-3">No usage recorded yet.</td>
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -1090,6 +1098,7 @@
               <table class="table table-sm table-hover align-middle mb-0">
                 <thead class="small text-uppercase text-muted ls-1">
                   <tr>
+                    <th>Sr No</th>
                     <th>Pin Type</th>
                     <th>{% if is_admin_view %}Transferred Pins{% else %}Unused Pins{% endif %}</th>
                     <th>Used Pins</th>
@@ -1099,6 +1108,7 @@
                 <tbody>
                   {% for row in pin_history_rows %}
                   <tr>
+                    <td class="small text-muted">{{ loop.index }}</td>
                     <td class="fw-semibold">{{ row.pin_type }}</td>
                     <td><span class="badge bg-success-subtle text-success border border-success border-opacity-10 rounded-pill px-3">{{ row.unused_count }}</span></td>
                     <td><span class="badge bg-secondary-subtle text-secondary border border-secondary border-opacity-10 rounded-pill px-3">{{ row.used_count }}</span></td>
@@ -1110,7 +1120,7 @@
                   </tr>
                   {% else %}
                   <tr>
-                    <td colspan="4" class="text-center text-muted py-4">No pin history available yet.</td>
+                    <td colspan="5" class="text-center text-muted py-4">No pin history available yet.</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -1129,7 +1139,7 @@
               </div>
                 <div class="d-flex gap-2 flex-wrap">
                   {% if is_admin_view %}
-                <a href="{{ url_for('main.home', target='hierarchySection') }}" class="btn btn-outline-warning psc-action-pill">
+                <a href="{{ url_for('main.home', target='epinSection', scroll='pendingApprovalsCard') }}" class="btn btn-outline-warning psc-action-pill">
                   <i class="bi bi-hourglass-split me-1"></i>Pending Approvals
                   {% set _pending_count = pending_requests|length if pending_requests else 0 %}
                   <span
@@ -1178,6 +1188,7 @@
                 <table class="table table-hover align-middle mb-0">
                   <thead>
                     <tr class="text-muted small text-uppercase ls-1">
+                      <th>Sr No</th>
                       <th>Member Details</th>
                       <th>Joining Date</th>
                       <th>User Type</th>
@@ -1190,6 +1201,7 @@
                   <tbody>
                     {% for member in direct_members %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       <td>
                         <div class="fw-bold">{{ member.name or 'Unnamed User' }}</div>
                         <small class="text-muted">PSC-ID: {{ member.emp_id or member.id }} | Mob: {{ member.mobile }}</small>
@@ -1220,7 +1232,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="{% if is_admin_view %}5{% else %}4{% endif %}" class="text-center text-muted py-4">No direct members added under your hierarchy yet.</td>
+                      <td colspan="{% if is_admin_view %}6{% else %}5{% endif %}" class="text-center text-muted py-4">No direct members added under your hierarchy yet.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -1260,6 +1272,7 @@
                   <table class="table table-sm table-borderless mb-0">
                     <thead class="small text-uppercase text-muted ls-1">
                       <tr>
+                        <th>Sr No</th>
                         <th>Level</th>
                         <th>Pin Count</th>
                         <th>Income Total</th>
@@ -1270,6 +1283,7 @@
                     <tbody>
                       {% for row in level_income_summary.contributions %}
                       <tr>
+                        <td class="small text-muted">{{ loop.index }}</td>
                         <td>Level {{ row.level }}</td>
                         <td>{{ row.count }}/{{ row.target }}</td>
                         <td>Rs. {{ row.income_total }}</td>
@@ -1431,6 +1445,7 @@
                 <table class="table table-hover align-middle">
                   <thead>
                     <tr class="text-muted small text-uppercase ls-1">
+                      <th>Sr No</th>
                       {% if is_admin_view %}
                       <th>User</th>
                       {% endif %}
@@ -1447,6 +1462,7 @@
                     {% if withdraw_history_rows %}
                     {% for req in withdraw_history_rows %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       {% if is_admin_view %}
                       <td>
                         <div class="fw-semibold">{{ req.user.name or 'User' }}</div>
@@ -1469,7 +1485,7 @@
                     {% endfor %}
                     {% else %}
                     <tr>
-                      <td colspan="{% if is_admin_view %}8{% else %}7{% endif %}" class="text-center text-muted py-4">No withdraw requests submitted yet.</td>
+                      <td colspan="{% if is_admin_view %}9{% else %}8{% endif %}" class="text-center text-muted py-4">No withdraw requests submitted yet.</td>
                     </tr>
                     {% endif %}
                   </tbody>
@@ -1490,6 +1506,7 @@
                 <table class="table table-hover align-middle">
                   <thead>
                     <tr class="text-muted small text-uppercase ls-1">
+                      <th>Sr No</th>
                       <th>User</th>
                       <th>Mobile</th>
                       <th>Available Balance</th>
@@ -1502,6 +1519,7 @@
                   <tbody>
                     {% for req in admin_withdraw_requests %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       <td class="fw-semibold">{{ req.user.name or 'User' }}</td>
                       <td class="small">{{ req.user.mobile }}</td>
                       <td>Rs. {{ '%.2f'|format(req.available_balance|default(0)|float) }}</td>
@@ -1516,7 +1534,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No pending withdrawal requests right now.</td>
+                      <td colspan="8" class="text-center text-muted py-4">No pending withdrawal requests right now.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -1536,6 +1554,7 @@
                 <table class="table table-hover align-middle">
                   <thead>
                     <tr class="text-muted small text-uppercase ls-1">
+                      <th>Sr No</th>
                       <th>User</th>
                       <th>Mobile</th>
                       <th>Product Access</th>
@@ -1548,6 +1567,7 @@
                   <tbody>
                     {% for row in admin_user_wallet_rows %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       <td class="fw-semibold">{{ row.name }}</td>
                       <td class="small">{{ row.mobile }}</td>
                       <td class="small">{{ row.product_access }}</td>
@@ -1558,7 +1578,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No user balances available yet.</td>
+                      <td colspan="8" class="text-center text-muted py-4">No user balances available yet.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -1920,6 +1940,7 @@
                 <table class="table table-hover align-middle" style="font-size: 0.85rem;" id="userMgmtTable">
                   <thead class="bg-light bg-opacity-50">
                     <tr>
+                      <th>Sr No</th>
                       <th>Emp ID</th>
                       <th>User Identity</th>
                       <th>Contact Info</th>
@@ -1938,6 +1959,7 @@
                     data-city="{{ (u.city or '')|lower }}" data-product="{{ (u.product_type or '')|lower }}"
                     data-pin="{{ (u.pin_type or '')|lower }}" data-approval="{{ (u.approval_status or '')|lower }}"
                     data-status="{{ (u.status or '')|lower }}" data-role="{{ (u.role or '')|lower }}">
+                    <td class="small text-muted">{{ loop.index }}</td>
                     <td><span class="badge bg-secondary rounded-pill">#{{ u.emp_id }}</span></td>
                     <td>
                       <div class="d-flex align-items-center">
@@ -2070,6 +2092,7 @@
                 <table class="table table-sm table-hover align-middle mb-0">
                   <thead class="small text-uppercase text-muted ls-1">
                     <tr>
+                      <th>Sr No</th>
                       <th>User</th>
                       <th>Type</th>
                       <th>Product</th>
@@ -2082,6 +2105,7 @@
                   <tbody>
                     {% for member in direct_members %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       <td>
                         <div class="fw-semibold">{{ member.name or 'User' }}</div>
                         <div class="text-muted small">{{ member.mobile }}</div>
@@ -2099,7 +2123,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No direct users added yet.</td>
+                      <td colspan="8" class="text-center text-muted py-4">No direct users added yet.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -2119,6 +2143,7 @@
                 <table class="table table-sm table-hover align-middle mb-0">
                   <thead class="small text-uppercase text-muted ls-1">
                     <tr>
+                      <th>Sr No</th>
                       <th>Applicant</th>
                       <th>Pin Type</th>
                       <th>Status</th>
@@ -2131,6 +2156,7 @@
                   <tbody>
                     {% for req in user_request_history %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       <td>
                         <div class="fw-semibold">{{ req.applicant_name or 'N/A' }}</div>
                         <div class="text-muted small">{{ req.applicant_mobile }}</div>
@@ -2156,7 +2182,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No user creation requests submitted yet.</td>
+                      <td colspan="8" class="text-center text-muted py-4">No user creation requests submitted yet.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -2294,6 +2320,7 @@
               <table class="table mb-0" style="background:#ffffff;color:#212529;">
                 <thead style="background:#f8f9fa;">
                   <tr>
+                    <th class="py-3 px-3 text-nowrap">Sr No</th>
                     <th class="py-3 px-3 text-nowrap">Level</th>
                     <th class="py-3 px-3 text-nowrap">Number of ID</th>
                     <th class="py-3 px-3 text-nowrap">Income per ID</th>
@@ -2309,6 +2336,7 @@
                   {% set total_income = (lp.number_of_id or 0) * (lp.income_per_id or 0) %}
                   {% set total_reward = (lp.number_of_id or 0) * (lp.reward_per_id or 0) %}
                   <tr>
+                    <td class="py-3 px-3 small text-muted">{{ loop.index }}</td>
                     <td class="py-3 px-3 fw-bold text-nowrap">{{ lp.level_no }}</td>
                     <td class="py-3 px-3 fw-bold">{{ lp.number_of_id or 0 }}</td>
                     <td class="py-3 px-3 fw-bold">{{ lp.income_per_id or 0 }}</td>
@@ -2355,6 +2383,7 @@
                 <table class="table mb-0" style="background:#ffffff;color:#212529;">
                   <thead style="background:#f8f9fa;">
                     <tr>
+                      <th class="py-3 px-3 text-nowrap">Sr No</th>
                       <th class="py-3 px-3 text-nowrap">User</th>
                       <th class="py-3 px-3 text-nowrap">Mobile</th>
                       <th class="py-3 px-3 text-nowrap">Requested By</th>
@@ -2367,6 +2396,7 @@
                   <tbody>
                     {% for row in admin_pending_usage_rows %}
                     <tr>
+                      <td class="py-3 px-3 small text-muted">{{ loop.index }}</td>
                       <td class="py-3 px-3 fw-semibold">
                         <div>{{ row.applicant_name }}</div>
                         <div class="small text-muted">MID: {{ row.member_id }}</div>
@@ -2385,7 +2415,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="7" class="py-4 px-3 text-center text-muted">No approved users are pending usage logs.</td>
+                      <td colspan="8" class="py-4 px-3 text-center text-muted">No approved users are pending usage logs.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -2405,6 +2435,7 @@
                 <table class="table mb-0" style="background:#ffffff;color:#212529; min-width: 1200px;">
                   <thead style="background:#f8f9fa; position: sticky; top: 0; z-index: 2;">
                     <tr>
+                      <th class="py-3 px-3 text-nowrap">Sr No</th>
                       <th class="py-3 px-3 text-nowrap">User</th>
                       <th class="py-3 px-3 text-nowrap">Product</th>
                       <th class="py-3 px-3 text-nowrap">Current Level</th>
@@ -2422,6 +2453,7 @@
                   <tbody>
                     {% for row in admin_user_level_rows %}
                     <tr>
+                      <td class="py-3 px-3 small text-muted">{{ loop.index }}</td>
                       <td class="py-3 px-3 fw-semibold">
                         <div>{{ row.name }}</div>
                         <div class="small text-muted">{{ row.mobile }}</div>
@@ -2440,7 +2472,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="12" class="py-4 px-3 text-center text-muted">No user level summaries available yet.</td>
+                      <td colspan="13" class="py-4 px-3 text-center text-muted">No user level summaries available yet.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -2490,6 +2522,7 @@
                   <table class="table mb-0" style="background:#ffffff;color:#212529;">
                     <thead style="background:#f8f9fa;">
                       <tr>
+                        <th class="py-3 px-3 text-nowrap">Sr No</th>
                         <th class="py-3 px-3 text-nowrap">Level</th>
                         <th class="py-3 px-3 text-nowrap">Number of ID</th>
                         <th class="py-3 px-3 text-nowrap">Income per ID</th>
@@ -2502,6 +2535,7 @@
                     <tbody>
                       {% for row in product_view.rows %}
                       <tr>
+                        <td class="py-3 px-3 small text-muted">{{ loop.index }}</td>
                         <td class="py-3 px-3 fw-bold text-nowrap">{{ row.level_no }}</td>
                         <td class="py-3 px-3 fw-bold">
                           <span class="badge rounded-pill bg-{{ row.status_key }} bg-opacity-10 text-{{ row.status_key }} border border-{{ row.status_key }} border-opacity-25 px-3">
@@ -2519,7 +2553,7 @@
                       </tr>
                       {% else %}
                       <tr>
-                        <td colspan="7" class="py-4 px-3 text-center text-muted">No {{ product_view.product_label }} level progress available yet.</td>
+                        <td colspan="8" class="py-4 px-3 text-center text-muted">No {{ product_view.product_label }} level progress available yet.</td>
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -2770,6 +2804,7 @@
               <table class="table table-hover align-middle">
                 <thead>
                   <tr class="text-muted small text-uppercase ls-1">
+                    <th>Sr No</th>
                     <th>Ticket Info</th>
                     <th>User / Mobile</th>
                     <th>Date</th>
@@ -2781,6 +2816,7 @@
                   {% set current_tickets = all_tickets if is_admin_view else support %}
                   {% for t in current_tickets %}
                   <tr>
+                    <td class="small text-muted">{{ loop.index }}</td>
                     <td>
                       <div class="fw-bold">#{{ t.ticket_no }}</div>
                       <small class="text-primary">{{ t.query_type }}</small>
@@ -2803,7 +2839,7 @@
                   </tr>
                   {% else %}
                   <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
+                    <td colspan="6" class="text-center py-5 text-muted">
                       <i class="bi bi-inbox display-4 d-block mb-3 opacity-25"></i>
                       No tickets found matching your filters.
                     </td>
@@ -3199,6 +3235,7 @@
                 <table class="table table-sm align-middle mb-0">
                   <thead class="small text-uppercase text-muted ls-1">
                     <tr>
+                      <th>Sr No</th>
                       <th>Pin Code</th>
                       <th>Product Type</th>
                       <th class="text-end">Created</th>
@@ -3207,6 +3244,7 @@
                   <tbody>
                     {% for pin in row.unused_details %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       <td class="font-monospace">{{ pin.code }}</td>
                       <td class="small">{{ pin.product_type }}</td>
                       <td class="text-end small text-muted">
@@ -3219,7 +3257,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="3" class="text-center text-muted py-4">No unused pins for this type.</td>
+                      <td colspan="4" class="text-center text-muted py-4">No unused pins for this type.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -3237,6 +3275,7 @@
                 <table class="table table-sm align-middle mb-0">
                   <thead class="small text-uppercase text-muted ls-1">
                     <tr>
+                      <th>Sr No</th>
                       <th>Pin Code</th>
                       <th>Buyer</th>
                       <th>Mobile</th>
@@ -3246,6 +3285,7 @@
                   <tbody>
                     {% for pin in row.used_details %}
                     <tr>
+                      <td class="small text-muted">{{ loop.index }}</td>
                       <td class="font-monospace">
                         {{ pin.pin_code }}
                         {% if pin.city %}
@@ -3269,7 +3309,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="4" class="text-center text-muted py-4">No used pins for this type.</td>
+                      <td colspan="5" class="text-center text-muted py-4">No used pins for this type.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -4270,6 +4310,14 @@
     const collapseId = urlParams.get('collapse');
     if (collapseId) {
       setTimeout(() => bsCollapseShow(collapseId), 150);
+    }
+
+    const scrollId = urlParams.get('scroll');
+    if (scrollId) {
+      setTimeout(() => {
+        const el = document.getElementById(scrollId);
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 250);
     }
 
     if (typeof flatpickr !== 'undefined' && document.getElementById('filter_date_range')) {
