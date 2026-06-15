@@ -13,6 +13,11 @@ class UserLogin(db.Model):
     name = db.Column(db.String(100), index=True)
     role = db.Column(db.String(20), default='user') # admin, user
     image_path = db.Column(db.String(255))  # relative path under /static, e.g. uploads/profile_photos/...
+
+    # Welcome letter overrides (admin editable)
+    letter_name = db.Column(db.String(120))
+    letter_joining_date = db.Column(db.Date)
+    letter_body = db.Column(db.Text)
     
     # New Fields
     city = db.Column(db.String(100))

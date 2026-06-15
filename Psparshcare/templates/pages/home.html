@@ -94,6 +94,226 @@
     margin: 0 auto;
   }
 
+  .psc-letter-signature {
+    max-width: 120px;
+    height: auto;
+    display: block;
+    margin: 0 auto 8px;
+  }
+
+  .psc-letter-head {
+    position: relative;
+    padding: 1rem 0 1.35rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .psc-letter-company {
+    letter-spacing: 0.14rem;
+    word-spacing: 0.42rem;
+    font-size: clamp(1.45rem, 2.3vw, 2.2rem);
+    line-height: 1.05;
+    margin-bottom: 0;
+  }
+
+  .psc-letter-head::after {
+    content: "";
+    display: block;
+    width: min(220px, 38vw);
+    height: 3px;
+    margin: 1rem auto 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.45), rgba(37, 99, 235, 0.08));
+  }
+
+  .psc-letter-recipient-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 1rem;
+    background:
+      linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.98)),
+      radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 40%);
+    box-shadow: 0 18px 30px rgba(15, 23, 42, 0.05);
+  }
+
+  .psc-letter-photo-box {
+    flex: 0 0 116px;
+    width: 116px;
+    min-height: 116px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 0.9rem;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+  }
+
+  .psc-letter-photo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .psc-letter-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1.25rem;
+    margin-top: 0.95rem;
+  }
+
+  .psc-letter-meta-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08rem;
+    color: #64748b;
+    margin-bottom: 0.22rem;
+  }
+
+  .psc-letter-meta-value {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .psc-letter-body {
+    border-left: 3px solid rgba(37, 99, 235, 0.14);
+    padding-left: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  .psc-letter-body p {
+    margin-bottom: 1rem;
+    text-align: justify;
+    text-justify: inter-word;
+    line-height: 1.8;
+    word-spacing: 0.08rem;
+  }
+
+  .psc-letter-refbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.95rem;
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05), rgba(255, 255, 255, 0.98));
+    border: 1px solid rgba(148, 163, 184, 0.22);
+  }
+
+  .psc-letter-refitem {
+    min-width: 160px;
+  }
+
+  .psc-letter-refvalue {
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.03rem;
+  }
+
+  .psc-letter-closing {
+    margin-top: 1.6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .psc-letter-sign-block {
+    min-width: 210px;
+    padding: 0.6rem 0.75rem 0.1rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
+  }
+
+  .psc-letter-date-block {
+    min-width: 220px;
+    padding: 0.7rem 0.9rem;
+    border-left: 3px solid rgba(37, 99, 235, 0.18);
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(255, 255, 255, 0.98));
+    border-radius: 0.9rem;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.04);
+  }
+
+  .psc-letter-endmeta {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+    font-size: 0.86rem;
+    letter-spacing: 0.02rem;
+  }
+
+  .psc-letter-sentence {
+    display: block;
+    margin-bottom: 0.45rem;
+  }
+
+  .psc-print-only-root {
+    display: none;
+  }
+
+  @media print {
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+
+    html, body {
+      background: #fff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body > :not(.psc-print-only-root) {
+      display: none !important;
+    }
+
+    .psc-print-only-root {
+      display: block !important;
+      position: relative !important;
+      width: 100% !important;
+      min-height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+
+    .psc-letter-editor,
+    .psc-letter-photo,
+    .psc-letter-photo-box {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .psc-letter-editor {
+      display: none !important;
+    }
+
+    .psc-letter-photo {
+      display: block !important;
+    }
+
+    .psc-letter-photo-box {
+      display: block !important;
+    }
+
+    .psc-letter-closing {
+      margin-top: 1rem !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    body * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+
   .portal-brand-wrap {
     margin: 0 0 1.4rem;
     padding: 0 0.75rem;
@@ -615,43 +835,132 @@
                 <div
                   class="bg-primary bg-opacity-10 p-4 border-bottom d-flex justify-content-between align-items-center">
                   <h5 class="fw-bold mb-0">E-Welcome Letter</h5>
-                  <button class="btn btn-sm btn-white rounded-pill px-3 shadow-sm border" onclick="window.print()"><i
-                      class="bi bi-printer me-2"></i>Print Letter</button>
+                  <div class="d-flex gap-2">
+                    {% if is_admin_view %}
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm" type="button" id="toggleWelcomeEditBtn">
+                      <i class="bi bi-pencil-square me-2"></i>Edit Letter
+                    </button>
+                    {% endif %}
+                    <button class="btn btn-sm btn-white rounded-pill px-3 shadow-sm border" type="button" onclick="printWelcomeLetter()"><i
+                        class="bi bi-printer me-2"></i>Print Letter</button>
+                  </div>
                 </div>
-                <div class="p-5" style="background: white; color: #1e293b; font-family: 'Times New Roman', serif;">
-                  <div class="text-center mb-5">
+                <div class="p-5" id="pscWelcomeLetter" style="background: white; color: #1e293b; font-family: 'Times New Roman', serif; max-width: 980px; margin: 0 auto;">
+                  {% if is_admin_view %}
+                  <div class="mb-4 p-4 rounded-4 border bg-light d-none psc-letter-editor" id="welcomeLetterEditor">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                      <div>
+                        <h6 class="fw-bold mb-1"><i class="bi bi-pencil-square me-2 text-primary"></i>Editable Letter Fields</h6>
+                        <p class="small text-muted mb-0">Search an employee and edit the name, joining date, and main letter content inline.</p>
+                      </div>
+                      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 rounded-pill px-3">Admin only</span>
+                    </div>
+                    <form method="POST" action="{{ url_for('main.admin_letter_settings_update') }}" class="row g-3">
+                      <input type="hidden" name="target" value="#profileSection">
+                      <div class="col-12">
+                        <label class="small fw-semibold text-muted mb-1">Employee Search</label>
+                        <select class="form-select rounded-pill select2-admin-letter-user" name="letter_user_id" id="adminLetterUserSelect" data-select2-parent="#welcomeLetterEditor" required>
+                          <option value="">Choose user...</option>
+                          {% for u in all_users %}
+                          <option
+                            value="{{ u.id }}"
+                            {% if current_user and u.id == current_user.id %}selected{% endif %}
+                            data-default-name="{{ (u.name or '')|e }}"
+                            data-default-date="{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '' }}"
+                            data-letter-name="{{ (u.letter_name or '')|e }}"
+                            data-letter-date="{{ u.letter_joining_date.strftime('%Y-%m-%d') if u.letter_joining_date else '' }}"
+                            data-letter-body="{{ (u.letter_body or '')|e }}"
+                            data-letter-photo="{{ (u.image_path or '')|e }}"
+                            data-member-id="{{ u.emp_id or (u.id|string).zfill(5) }}"
+                          >
+                            {{ u.emp_id or (u.id|string).zfill(5) }} - {{ u.name or 'User' }} ({{ u.mobile }})
+                          </option>
+                          {% endfor %}
+                        </select>
+                        <div class="form-text">Type a name, mobile number, or employee ID to search quickly.</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="small fw-semibold text-muted mb-1">Letter Name Override</label>
+                        <input class="form-control rounded-pill" name="letter_name" id="adminLetterNameInput" placeholder="Leave blank to use the user's name">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="small fw-semibold text-muted mb-1">Joining Date Override</label>
+                        <input type="date" class="form-control rounded-pill" name="letter_joining_date" id="adminLetterDateInput">
+                        <div class="form-text">Leave blank to use the user's created date.</div>
+                      </div>
+                      <div class="col-12">
+                        <label class="small fw-semibold text-muted mb-1">Main Letter Content</label>
+                        <textarea class="form-control rounded-4" rows="6" name="letter_body" id="adminLetterBodyInput" placeholder="Edit the main body of the welcome letter here..."></textarea>
+                      </div>
+                      <div class="col-12 text-end">
+                        <button type="button" class="btn btn-light rounded-pill px-4 me-2" id="closeWelcomeEditBtn">Close</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Save Letter</button>
+                      </div>
+                    </form>
+                  </div>
+                  {% endif %}
+                  <div class="text-center mb-5 psc-letter-head">
                     <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo"
                       class="psc-site-logo psc-site-logo-letter">
-                    <h2 class="mt-4 fw-bold text-uppercase" style="letter-spacing: 2px;">PRAKRITIKSPARSHCARE</h2>
+                    <h2 class="mt-4 fw-bold text-uppercase psc-letter-company">PRAKRITIK SPARSH CARE</h2>
                     <div class="text-muted small">Prakritik SparshCare Pvt. Ltd.</div>
-                    <div class="h4 mt-4 text-decoration-underline" style="font-weight: 300;">CERTIFICATE OF MEMBERSHIP
-                    </div>
+                    <div class="mt-2 small text-uppercase fw-semibold text-primary" style="letter-spacing: 0.18rem;">Official Welcome Letter</div>
                   </div>
 
-                  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                    <p class="lh-lg mb-0">To,<br><strong>{{ profile.name }}</strong><br>Member ID: {{ profile_member_id }}</p>
+                  <div class="psc-letter-recipient-card">
+                    <div class="flex-grow-1">
+                      <div class="psc-letter-meta-label">To</div>
+                      <div class="fs-4 fw-bold mb-1" id="welcomeLetterNamePreview">{{ welcome_letter_name }}</div>
+                      <div class="psc-letter-meta-grid">
+                        <div>
+                          <div class="psc-letter-meta-label">Member ID</div>
+                          <div class="psc-letter-meta-value" id="welcomeLetterMemberIdPreview">{{ profile_member_id }}</div>
+                        </div>
+                      </div>
+                    </div>
                     {% if current_user and current_user.image_path %}
-                      <img src="{{ url_for('static', filename=current_user.image_path) }}" alt="Profile photo" class="psc-user-photo-letter">
+                    <div class="psc-letter-photo-box">
+                      <img id="welcomeLetterPhotoPreview" class="psc-letter-photo" src="{{ url_for('static', filename=current_user.image_path) }}" alt="Profile photo">
+                    </div>
+                    {% else %}
+                    <img id="welcomeLetterPhotoPreview" src="" alt="Profile photo" class="psc-letter-photo" style="display:none;">
                     {% endif %}
                   </div>
 
-                  <p class="mt-4 lh-lg">Dear Partner,</p>
-                  <p class="lh-lg">Welcome to the PrakritikSparshCare family! It is with great pleasure that we officially
-                    welcome you as a valued member of our growing community. Our mission is to empower lives through
-                    natural wellness and financial freedom, and we are excited to have you join us on this journey.</p>
+                  <p class="mt-4 lh-lg fw-semibold text-uppercase text-primary" style="letter-spacing: 0.12rem; margin-bottom: 0.85rem;">Dear Partner,</p>
+                  <div id="welcomeLetterBodyPreview" class="psc-letter-body">
+                    {% for paragraph in welcome_letter_body_paragraphs %}
+                    <p class="lh-lg">
+                      {% for sentence in paragraph.split('||') %}
+                      <span class="psc-letter-sentence">{{ sentence }}</span>
+                      {% endfor %}
+                    </p>
+                    {% endfor %}
+                  </div>
 
-                  <p class="lh-lg">As a member, you now have full access to our premium portal, real-time earnings
-                    tracking, and resource management tools. We are committed to supporting your success every
-                    step of the way.</p>
-
-                  <div class="mt-5 pt-4 d-flex justify-content-between">
-                    <div>
-                      <p class="small text-muted mb-1">Joining Date:</p>
-                      <p class="fw-bold">{{ session.get('created_at', '01-Mar-2026') }}</p>
+                  <div class="psc-letter-closing">
+                    <div class="psc-letter-date-block">
+                      <div class="psc-letter-meta-label mb-1">Joining Date</div>
+                      <div class="psc-letter-refvalue" id="welcomeLetterDatePreview">{{ welcome_letter_joining_date_display or '---' }}</div>
                     </div>
-                    <div class="text-center">
-                      <div style="border-bottom: 1px solid #ddd; width: 120px; height: 40px; margin: 0 auto;"></div>
-                      <p class="small text-muted mt-2">Authorized Seal</p>
+                    <div class="text-center psc-letter-sign-block">
+                      <img src="{{ url_for('static', filename='img/sign.png') }}" alt="Signature" class="psc-letter-signature">
+                      <div style="border-bottom: 1px solid #ddd; width: 160px; height: 0; margin: 0 auto;"></div>
+                      <p class="small text-muted mt-2 mb-1 text-uppercase fw-semibold" style="letter-spacing: 0.06rem;">Authorized Signature</p>
+                      <div class="small text-muted" style="max-width: 220px; margin: 0 auto;">Prakritik SparshCare Pvt. Ltd.</div>
+                    </div>
+                  </div>
+
+                  <div class="psc-letter-endmeta">
+                    <div class="d-flex justify-content-between flex-wrap gap-2">
+                      <div>
+                        <span class="psc-letter-meta-label mb-0 d-block">Reference No.</span>
+                        <span class="psc-letter-refvalue">PSC-WL-{{ profile_member_id }}</span>
+                      </div>
+                      <div class="text-end ms-auto">
+                        <span class="psc-letter-meta-label mb-0 d-block">Issued On</span>
+                        <span class="psc-letter-refvalue" id="welcomeLetterDatePreviewTop">{{ welcome_letter_joining_date_display or '---' }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -3880,6 +4189,128 @@
     bootstrap.Collapse.getOrCreateInstance(el).show();
   };
 
+  function printWelcomeLetter() {
+    const source = document.getElementById('pscWelcomeLetter');
+    if (!source) {
+      window.print();
+      return;
+    }
+
+    const existing = document.getElementById('pscPrintOnlyRoot');
+    if (existing) existing.remove();
+
+    const root = document.createElement('div');
+    root.id = 'pscPrintOnlyRoot';
+    root.className = 'psc-print-only-root';
+    root.style.background = '#fff';
+
+    const clone = source.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.style.margin = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.border = '0';
+    clone.style.maxWidth = '100%';
+
+    const editor = clone.querySelector('#welcomeLetterEditor');
+    if (editor) editor.remove();
+
+    root.appendChild(clone);
+    document.body.appendChild(root);
+
+    const cleanup = () => {
+      const current = document.getElementById('pscPrintOnlyRoot');
+      if (current) current.remove();
+      window.removeEventListener('afterprint', cleanup);
+    };
+
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(() => window.print(), 50);
+  }
+
+  const defaultWelcomeLetterBody = {{ welcome_letter_default_body | tojson }};
+
+  function syncAdminLetterFields(selectEl) {
+    const nameInput = document.getElementById('adminLetterNameInput');
+    const dateInput = document.getElementById('adminLetterDateInput');
+    const bodyInput = document.getElementById('adminLetterBodyInput');
+    const namePreview = document.getElementById('welcomeLetterNamePreview');
+    const memberIdPreview = document.getElementById('welcomeLetterMemberIdPreview');
+    const datePreview = document.getElementById('welcomeLetterDatePreview');
+    const bodyPreview = document.getElementById('welcomeLetterBodyPreview');
+    const photoPreview = document.getElementById('welcomeLetterPhotoPreview');
+    if (!selectEl || !nameInput || !dateInput) return;
+
+    const formatDate = (value) => {
+      if (!value) return '---';
+      const [y, m, d] = String(value).split('-');
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthName = months[Math.max(0, Number(m) - 1)] || m;
+      return `${d}-${monthName}-${y}`;
+    };
+    const escapeHtml = (value) => String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    const renderBody = (rawText) => {
+      if (!bodyPreview) return;
+      const paragraphs = String(rawText || '')
+        .split(/\n\s*\n/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => part
+          .replace(/\s+/g, ' ')
+          .split(/(?<=[.!?])\s+/)
+          .map((sentence) => sentence.trim())
+          .filter(Boolean)
+          .join('||'));
+      bodyPreview.innerHTML = paragraphs.length
+        ? paragraphs.map((part) => `<p class="lh-lg">${part.split('||').map((sentence) => `<span class="psc-letter-sentence">${escapeHtml(sentence)}</span>`).join('')}</p>`).join('')
+        : '<p class="lh-lg text-muted">No letter content provided.</p>';
+    };
+
+    const option = selectEl.options[selectEl.selectedIndex];
+    if (!option || !option.value) {
+      nameInput.value = '';
+      dateInput.value = '';
+      if (bodyInput) bodyInput.value = defaultWelcomeLetterBody;
+      if (namePreview) namePreview.textContent = '';
+      if (memberIdPreview) memberIdPreview.textContent = '-----';
+      if (datePreview) datePreview.textContent = '---';
+      if (photoPreview) {
+        photoPreview.removeAttribute('src');
+        photoPreview.style.display = 'none';
+      }
+      renderBody('');
+      return;
+    }
+
+    const resolvedName = option.getAttribute('data-letter-name') || option.getAttribute('data-default-name') || '';
+    const resolvedDate = option.getAttribute('data-letter-date') || option.getAttribute('data-default-date') || '';
+    const resolvedBody = option.getAttribute('data-letter-body') || defaultWelcomeLetterBody;
+    const resolvedPhoto = option.getAttribute('data-letter-photo') || '';
+    const resolvedMemberId = option.getAttribute('data-member-id') || '';
+    nameInput.value = resolvedName;
+    dateInput.value = resolvedDate;
+    if (bodyInput) {
+      bodyInput.value = resolvedBody;
+    }
+    if (namePreview) namePreview.textContent = resolvedName || '';
+    if (memberIdPreview) memberIdPreview.textContent = resolvedMemberId || '-----';
+    if (datePreview) datePreview.textContent = formatDate(resolvedDate);
+    if (photoPreview) {
+      if (resolvedPhoto) {
+        photoPreview.src = "{{ url_for('static', filename='') }}" + resolvedPhoto;
+        photoPreview.style.display = '';
+      } else {
+        photoPreview.removeAttribute('src');
+        photoPreview.style.display = 'none';
+      }
+    }
+    renderBody(resolvedBody);
+  }
+
   function isolateCorporateAccordion(collapseId) {
     const items = document.querySelectorAll('#corporateAccordion .accordion-item');
     if (!items.length) return;
@@ -4335,6 +4766,87 @@
 
     bindLevelEditButtons();
 
+    const adminLetterSelect = document.getElementById('adminLetterUserSelect');
+    if (adminLetterSelect) {
+      adminLetterSelect.addEventListener('change', () => syncAdminLetterFields(adminLetterSelect));
+      syncAdminLetterFields(adminLetterSelect);
+    }
+    const welcomeLetterEditor = document.getElementById('welcomeLetterEditor');
+    const toggleWelcomeEditBtn = document.getElementById('toggleWelcomeEditBtn');
+    const closeWelcomeEditBtn = document.getElementById('closeWelcomeEditBtn');
+    if (toggleWelcomeEditBtn && welcomeLetterEditor) {
+      toggleWelcomeEditBtn.addEventListener('click', () => {
+        welcomeLetterEditor.classList.toggle('d-none');
+        if (!welcomeLetterEditor.classList.contains('d-none')) {
+          syncAdminLetterFields(adminLetterSelect);
+          welcomeLetterEditor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+    if (closeWelcomeEditBtn && welcomeLetterEditor) {
+      closeWelcomeEditBtn.addEventListener('click', () => {
+        welcomeLetterEditor.classList.add('d-none');
+      });
+    }
+
+    const adminLetterNameInput = document.getElementById('adminLetterNameInput');
+    const adminLetterDateInput = document.getElementById('adminLetterDateInput');
+    const adminLetterBodyInput = document.getElementById('adminLetterBodyInput');
+    const welcomeLetterNamePreview = document.getElementById('welcomeLetterNamePreview');
+    const welcomeLetterMemberIdPreview = document.getElementById('welcomeLetterMemberIdPreview');
+    const welcomeLetterDatePreview = document.getElementById('welcomeLetterDatePreview');
+    const welcomeLetterBodyPreview = document.getElementById('welcomeLetterBodyPreview');
+    const welcomeLetterPhotoPreview = document.getElementById('welcomeLetterPhotoPreview');
+    const updateLivePreview = () => {
+      if (!adminLetterSelect || !adminLetterSelect.value) return;
+      const selectedOption = adminLetterSelect.options[adminLetterSelect.selectedIndex];
+      const formatDate = (value) => {
+        if (!value) return '---';
+        const [y, m, d] = value.split('-');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthName = months[Math.max(0, Number(m) - 1)] || m;
+        return `${d}-${monthName}-${y}`;
+      };
+      const escapeHtml = (value) => String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      if (welcomeLetterNamePreview && adminLetterNameInput) welcomeLetterNamePreview.textContent = adminLetterNameInput.value.trim() || '';
+      if (welcomeLetterMemberIdPreview && selectedOption) welcomeLetterMemberIdPreview.textContent = selectedOption.getAttribute('data-member-id') || '-----';
+      const formattedDate = formatDate(adminLetterDateInput ? adminLetterDateInput.value : '');
+      if (welcomeLetterDatePreview) welcomeLetterDatePreview.textContent = formattedDate;
+      if (welcomeLetterBodyPreview && adminLetterBodyInput) {
+        const bodySource = adminLetterBodyInput.value.trim() || defaultWelcomeLetterBody;
+        const paragraphs = bodySource.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+        welcomeLetterBodyPreview.innerHTML = paragraphs.length
+          ? paragraphs.map((part) => {
+            const sentences = part
+              .replace(/\s+/g, ' ')
+              .split(/(?<=[.!?])\s+/)
+              .map((sentence) => sentence.trim())
+              .filter(Boolean);
+            return `<p class="lh-lg">${sentences.map((sentence) => `<span class="psc-letter-sentence">${escapeHtml(sentence)}</span>`).join('')}</p>`;
+          }).join('')
+          : '<p class="lh-lg text-muted">No letter content provided.</p>';
+      }
+      if (welcomeLetterPhotoPreview && selectedOption) {
+        const resolvedPhoto = selectedOption.getAttribute('data-letter-photo') || '';
+        if (resolvedPhoto) {
+          welcomeLetterPhotoPreview.src = "{{ url_for('static', filename='') }}" + resolvedPhoto;
+          welcomeLetterPhotoPreview.style.display = '';
+        } else {
+          welcomeLetterPhotoPreview.removeAttribute('src');
+          welcomeLetterPhotoPreview.style.display = 'none';
+        }
+      }
+    };
+    if (adminLetterNameInput) adminLetterNameInput.addEventListener('input', updateLivePreview);
+    if (adminLetterDateInput) adminLetterDateInput.addEventListener('input', updateLivePreview);
+    if (adminLetterBodyInput) adminLetterBodyInput.addEventListener('input', updateLivePreview);
+    updateLivePreview();
+
     const validationMsg = {{ (show_validation_popup or '') | tojson }};
     if (validationMsg && validationMsg !== 'None') {
       const el = document.getElementById('validationMsg');
@@ -4690,6 +5202,15 @@
           window.jQuery(this).select2({
             width: '100%',
             placeholder: 'Search by name or mobile',
+            allowClear: false,
+            dropdownParent: window.jQuery(parentSelector)
+          });
+        });
+        window.jQuery('.select2-admin-letter-user').each(function () {
+          const parentSelector = window.jQuery(this).data('select2-parent') || '#welcomeLetterEditor';
+          window.jQuery(this).select2({
+            width: '100%',
+            placeholder: 'Search by employee name / mobile / ID',
             allowClear: false,
             dropdownParent: window.jQuery(parentSelector)
           });

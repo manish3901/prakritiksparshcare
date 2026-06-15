@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, jsonify
 from datetime import datetime, timedelta, date
 import os
+import re
 import secrets
 import smtplib
 import string
@@ -24,6 +25,26 @@ APP_URL = os.getenv('APP_URL', 'http://localhost:5000')
 NON_ADMIN_MEMBER_ROLES = {'member', 'leader', 'temp member', 'trainer'}
 LEVEL_PRODUCTS = ('pad', 'diaper')
 LEVEL_FILTER_OPTIONS = LEVEL_PRODUCTS + ('all',)
+
+def split_letter_body_for_display(body_text):
+    raw_text = (body_text or '').strip()
+    if not raw_text:
+        return []
+
+    display_paragraphs = []
+    source_paragraphs = [part.strip() for part in raw_text.split("\n\n") if part.strip()]
+    if not source_paragraphs:
+        source_paragraphs = [raw_text]
+
+    for paragraph in source_paragraphs:
+        sentence_chunks = []
+        for piece in re.split(r'(?<=[.!?])\s+', paragraph.replace("\n", " ").strip()):
+            sentence = piece.strip()
+            if sentence:
+                sentence_chunks.append(sentence)
+        if sentence_chunks:
+            display_paragraphs.append("||".join(sentence_chunks))
+    return display_paragraphs
 
 def normalize_mobile(value):
     digits = "".join(ch for ch in (value or "") if ch.isdigit())
@@ -1399,6 +1420,34 @@ def get_home_context():
         'state': profile_db.state if profile_db else 'N/A',
     }
     profile_member_id = (getattr(current_user, 'emp_id', None) if current_user else None) or (str(user_id).zfill(5) if user_id else '-----')
+    # Welcome letter display values (can be overridden by admin on user_login)
+    welcome_letter_name = None
+    welcome_letter_joining_date_value = None
+    welcome_letter_body = None
+    if current_user:
+        welcome_letter_name = (getattr(current_user, 'letter_name', None) or '').strip() or None
+        welcome_letter_joining_date_value = getattr(current_user, 'letter_joining_date', None)
+        welcome_letter_body = (getattr(current_user, 'letter_body', None) or '').strip() or None
+        if not welcome_letter_joining_date_value and getattr(current_user, 'created_at', None):
+            try:
+                welcome_letter_joining_date_value = current_user.created_at.date()
+            except Exception:
+                welcome_letter_joining_date_value = None
+    if not welcome_letter_name:
+        welcome_letter_name = profile.get('name') or 'User'
+    welcome_letter_joining_date_display = (
+        welcome_letter_joining_date_value.strftime('%d-%b-%Y')
+        if welcome_letter_joining_date_value
+        else ''
+    )
+    default_welcome_letter_body = (
+        "Welcome to the PrakritikSparshCare family! It is with great pleasure that we officially "
+        "welcome you as a valued member of our growing community. Our mission is to empower lives through "
+        "natural wellness and financial freedom, and we are excited to have you join us on this journey.\n\n"
+        "As a member, you now have full access to our premium portal, real-time earnings tracking, and resource "
+        "management tools. We are committed to supporting your success every step of the way."
+    )
+    welcome_letter_body_paragraphs = split_letter_body_for_display(welcome_letter_body or default_welcome_letter_body)
 
     # 2. Bank Details
     bank_db = AccountSettings.query.filter_by(user_id=user_id).first()
@@ -2103,6 +2152,10 @@ def get_home_context():
         'is_admin_view': is_admin_view,
         'profile': profile,
         'profile_member_id': profile_member_id,
+        'welcome_letter_name': welcome_letter_name,
+        'welcome_letter_joining_date_display': welcome_letter_joining_date_display,
+        'welcome_letter_default_body': default_welcome_letter_body,
+        'welcome_letter_body_paragraphs': welcome_letter_body_paragraphs,
         'news_list': news_list,
         'carousel_items': carousel_items,
         'events': events,
@@ -2191,6 +2244,47 @@ def get_home_context():
         'current_year': datetime.now().year
     }
     return context
+
+
+@main.route('/admin/letter/settings/update', methods=['POST'])
+def admin_letter_settings_update():
+    """Admin-only: update Welcome Letter override fields stored on user_login."""
+    if not is_admin_user(get_session_user()):
+        return redirect_home_with_target()
+
+    try:
+        target_user_id = int(request.form.get('letter_user_id') or 0)
+    except Exception:
+        target_user_id = 0
+
+    if not target_user_id:
+        session['validation_popup'] = "Please select a user to edit the welcome letter."
+        return redirect_home_with_target("#profileSection")
+
+    target_user = UserLogin.query.get(target_user_id)
+    if not target_user:
+        session['validation_popup'] = "Selected user was not found."
+        return redirect_home_with_target("#profileSection")
+
+    name_raw = (request.form.get('letter_name') or '').strip()
+    joining_date_raw = (request.form.get('letter_joining_date') or '').strip()
+    body_raw = (request.form.get('letter_body') or '').strip()
+
+    target_user.letter_name = name_raw or None
+    if joining_date_raw:
+        try:
+            from datetime import datetime
+            target_user.letter_joining_date = datetime.strptime(joining_date_raw, '%Y-%m-%d').date()
+        except Exception:
+            session['validation_popup'] = "Joining date must be a valid date (YYYY-MM-DD)."
+            return redirect_home_with_target("#profileSection")
+    else:
+        target_user.letter_joining_date = None
+    target_user.letter_body = body_raw or None
+
+    db.session.commit()
+    session['user_action_msg'] = f"Welcome letter updated for {target_user.name or target_user.mobile}."
+    return redirect_home_with_target("#profileSection")
 
 # ----- Dashboard -----
 @main.route('/home')

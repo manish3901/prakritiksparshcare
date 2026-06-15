@@ -134,6 +134,30 @@ def ensure_user_login_profile_photo_column(app: Flask):
         except Exception:
             app.logger.exception("Skipping ensure_user_login_profile_photo_column due to DB permissions or engine error.")
 
+
+def ensure_user_login_welcome_letter_columns(app: Flask):
+    """Allow admin to override fields shown on the Welcome Letter."""
+    with app.app_context():
+        engine = db.get_engine()
+        inspector = inspect(engine)
+        if 'user_login' not in inspector.get_table_names():
+            return
+
+        columns = {col_info['name'] for col_info in inspector.get_columns('user_login')}
+        try:
+            with engine.begin() as conn:
+                if 'letter_name' not in columns:
+                    conn.execute(text("ALTER TABLE user_login ADD COLUMN letter_name VARCHAR(120);"))
+                    app.logger.info("Added missing user_login.letter_name column via auto-migration.")
+                if 'letter_joining_date' not in columns:
+                    conn.execute(text("ALTER TABLE user_login ADD COLUMN letter_joining_date DATE;"))
+                    app.logger.info("Added missing user_login.letter_joining_date column via auto-migration.")
+                if 'letter_body' not in columns:
+                    conn.execute(text("ALTER TABLE user_login ADD COLUMN letter_body TEXT;"))
+                    app.logger.info("Added missing user_login.letter_body column via auto-migration.")
+        except Exception:
+            app.logger.exception("Skipping ensure_user_login_welcome_letter_columns due to DB permissions or engine error.")
+
 def ensure_base_schema(app: Flask):
     """
     Ensure the core schema exists on a fresh database.
@@ -179,6 +203,7 @@ def ensure_schema_bootstrap(app: Flask):
             _best_effort("user_login_level", ensure_user_login_level_column)
             _best_effort("user_login_columns", ensure_user_login_columns)
             _best_effort("user_login_profile_photo", ensure_user_login_profile_photo_column)
+            _best_effort("user_login_welcome_letter", ensure_user_login_welcome_letter_columns)
             _best_effort("level_plans", ensure_level_plans_table)
             _best_effort("user_creation_requests", ensure_user_creation_requests_table)
             _best_effort("user_creation_request_columns", ensure_user_creation_request_columns)
