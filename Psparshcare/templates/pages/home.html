@@ -260,7 +260,7 @@
   @media print {
     @page {
       size: A4;
-      margin: 12mm;
+      margin: 8mm;
     }
 
     html, body {
@@ -283,6 +283,26 @@
       overflow: visible !important;
     }
 
+    .psc-print-only-root .p-5 {
+      padding: 0.4rem !important;
+    }
+
+    .psc-print-only-root .mb-5 {
+      margin-bottom: 0.9rem !important;
+    }
+
+    .psc-print-only-root .mt-4 {
+      margin-top: 0.55rem !important;
+    }
+
+    .psc-print-only-root .mt-5 {
+      margin-top: 0.85rem !important;
+    }
+
+    .psc-print-only-root .pt-4 {
+      padding-top: 0.7rem !important;
+    }
+
     .psc-letter-editor,
     .psc-letter-photo,
     .psc-letter-photo-box {
@@ -302,10 +322,94 @@
       display: block !important;
     }
 
+    .psc-site-logo-letter {
+      width: 120px !important;
+      height: 44px !important;
+    }
+
+    .psc-letter-head {
+      padding: 0.35rem 0 0.55rem !important;
+      margin-bottom: 0.7rem !important;
+    }
+
+    .psc-letter-company {
+      font-size: 1.35rem !important;
+      letter-spacing: 0.09rem !important;
+      word-spacing: 0.22rem !important;
+    }
+
+    .psc-letter-head::after {
+      width: 180px !important;
+      height: 2px !important;
+      margin-top: 0.55rem !important;
+    }
+
+    .psc-letter-recipient-card {
+      padding: 0.7rem 0.85rem !important;
+      gap: 0.75rem !important;
+    }
+
+    .psc-letter-photo-box {
+      flex-basis: 86px !important;
+      width: 86px !important;
+      min-height: 108px !important;
+    }
+
+    .psc-letter-meta-grid {
+      margin-top: 0.55rem !important;
+      gap: 0.45rem 0.8rem !important;
+    }
+
+    .psc-letter-body {
+      padding-left: 0.75rem !important;
+      margin-top: 0.1rem !important;
+    }
+
+    .psc-letter-body p {
+      margin-bottom: 0.45rem !important;
+      line-height: 1.4 !important;
+      word-spacing: 0.04rem !important;
+    }
+
+    .psc-letter-sentence {
+      margin-bottom: 0.18rem !important;
+    }
+
     .psc-letter-closing {
-      margin-top: 1rem !important;
+      margin-top: 0.65rem !important;
       page-break-inside: avoid;
       break-inside: avoid;
+    }
+
+    .psc-letter-sign-block {
+      min-width: 180px !important;
+      padding: 0.35rem 0.55rem 0.05rem !important;
+    }
+
+    .psc-letter-signature {
+      max-width: 90px !important;
+      margin-bottom: 4px !important;
+    }
+
+    .psc-letter-date-block {
+      min-width: 170px !important;
+      padding: 0.45rem 0.65rem !important;
+    }
+
+    .psc-letter-endmeta {
+      margin-top: 0.5rem !important;
+      padding-top: 0.45rem !important;
+      font-size: 0.76rem !important;
+    }
+
+    .psc-letter-meta-label {
+      font-size: 0.66rem !important;
+      letter-spacing: 0.05rem !important;
+      margin-bottom: 0.1rem !important;
+    }
+
+    .psc-letter-refvalue {
+      font-size: 0.88rem !important;
     }
 
     body * {
@@ -918,12 +1022,10 @@
                         </div>
                       </div>
                     </div>
-                    {% if current_user and current_user.image_path %}
+                    {% if sidebar_avatar_path %}
                     <div class="psc-letter-photo-box">
-                      <img id="welcomeLetterPhotoPreview" class="psc-letter-photo" src="{{ url_for('static', filename=current_user.image_path) }}" alt="Profile photo">
+                      <img id="welcomeLetterPhotoPreview" class="psc-letter-photo" src="{{ url_for('static', filename=sidebar_avatar_path) }}" alt="Profile photo">
                     </div>
-                    {% else %}
-                    <img id="welcomeLetterPhotoPreview" src="" alt="Profile photo" class="psc-letter-photo" style="display:none;">
                     {% endif %}
                   </div>
 
@@ -4189,7 +4291,7 @@
     bootstrap.Collapse.getOrCreateInstance(el).show();
   };
 
-  function printWelcomeLetter() {
+  async function printWelcomeLetter() {
     const source = document.getElementById('pscWelcomeLetter');
     if (!source) {
       window.print();
@@ -4210,6 +4312,8 @@
     clone.style.boxShadow = 'none';
     clone.style.border = '0';
     clone.style.maxWidth = '100%';
+    clone.style.width = '100%';
+    clone.style.minHeight = '0';
 
     const editor = clone.querySelector('#welcomeLetterEditor');
     if (editor) editor.remove();
@@ -4224,7 +4328,21 @@
     };
 
     window.addEventListener('afterprint', cleanup);
-    setTimeout(() => window.print(), 50);
+
+    const waitForImageLoad = (img) => new Promise((resolve) => {
+      if (!img) return resolve();
+      if (img.complete) return resolve();
+      img.addEventListener('load', resolve, { once: true });
+      img.addEventListener('error', resolve, { once: true });
+    });
+
+    const imageNodes = Array.from(root.querySelectorAll('img'));
+    const imageWaits = imageNodes.map(waitForImageLoad);
+    const fontWait = document.fonts && document.fonts.ready ? document.fonts.ready.catch(() => null) : Promise.resolve();
+
+    await Promise.all([...imageWaits, fontWait]);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    window.print();
   }
 
   const defaultWelcomeLetterBody = {{ welcome_letter_default_body | tojson }};
